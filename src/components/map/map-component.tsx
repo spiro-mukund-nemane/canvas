@@ -27,6 +27,8 @@ export default function MapComponent() {
     (state: RootState) => state.layer,
   )
 
+  // const [mapStyle, setMapStyle] = useState("light"); // default is light
+
   const [viewState, setViewState] = useState({
     longitude: 78.9629,
     latitude: 20.5937,
@@ -203,11 +205,19 @@ export default function MapComponent() {
   }, [layerGroups])
 
   // Get the appropriate map style URL based on the current theme
+  // const getMapStyleUrl = () => {
+  //   return mapStyle === "dark"
+  //     ? "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+  //     : `${import.meta.env.SPIRO_MAPS_STYLE_API_URL}?key=${import.meta.env.KEY}`
+  // }
+
   const getMapStyleUrl = () => {
-    return mapStyle === "dark"
-      ? "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-      : `${import.meta.env.SPIRO_MAPS_STYLE_API_URL}`
-  }
+    if (mapStyle === "dark") {
+      return "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+    } else {
+      return `${import.meta.env.VITE_SPIRO_MAPS_STYLE_API_URL}?key=${import.meta.env.VITE_SPIRO_MAPS_STYLE_API_KEY}`;
+    }
+  };
 
   return (
     <div style={{ height: "100vh" }}>

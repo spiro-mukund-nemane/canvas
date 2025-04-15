@@ -1,4 +1,4 @@
-"use client"
+
 import { CollapsibleLegend } from "./collapsible-legend"
 import { StylePanel } from "./style-panel"
 import { useSelector, useDispatch } from "react-redux"

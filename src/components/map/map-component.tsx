@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useRef, useCallback } from "react"
 import {
   Map,
@@ -208,7 +206,7 @@ export default function MapComponent() {
   const getMapStyleUrl = () => {
     return mapStyle === "dark"
       ? "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-      : "https://api.spiromaps.com/maps/styles/streets/style.json?key=kuyMFvcwNAFH7TBdKA0B05qtlLC4wElN"
+      : `${import.meta.env.SPIRO_MAPS_STYLE_API_URL}`
   }
 
   return (

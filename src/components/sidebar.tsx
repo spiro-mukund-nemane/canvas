@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { Map, FileText, Menu } from "lucide-react"
 import { Link, useNavigate, useMatch } from "@tanstack/react-router"

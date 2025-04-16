@@ -1,5 +1,5 @@
 import type React from "react"
-import { Map, FileText, Menu } from "lucide-react"
+import { Map, FileText, Menu, Cpu, CloudDownload } from "lucide-react"
 import { Link, useNavigate, useMatch } from "@tanstack/react-router"
 import { cn } from "../lib/utils"
 import { ScrollArea } from "./ui/scroll-area"
@@ -97,6 +97,12 @@ export function Sidebar({ className }: SidebarProps) {
                 </NavLink>
                 <NavLink to={`/map/${currentProject.id}`} disabled={isVisualizeDisabled} icon={Map}>
                   Visualization
+                </NavLink>
+                <NavLink to={`/project/${currentProject.id}/run-analysis`} icon={Cpu}>
+                  Run analysis
+                </NavLink>
+                <NavLink to={`/project/${currentProject.id}/results`} icon={CloudDownload}>
+                  Results
                 </NavLink>
               </div>
             </div>

@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit"
 import projectReducer from "./project/projectSlice"
 import fileReducer from "./file/fileSlice"
 import layerReducer from "./map/layerSlice"
+import analysisReducer from './analysis/analysisSlice'
 
 // Configure the Redux store
 const store = configureStore({
@@ -9,6 +10,7 @@ const store = configureStore({
     project: projectReducer,
     file: fileReducer,
     layer: layerReducer,
+    analysis: analysisReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

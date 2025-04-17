@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "@tanstack/react-router"
@@ -18,6 +16,7 @@ import type { AppDispatch, RootState } from "../../store"
 import {
   runAnalysis,
   categorizeFilesByLayerType,
+  fetchProjectFiles,
   setNormalizationFile,
   addNormalizationLayer,
   removeNormalizationLayer,
@@ -43,11 +42,16 @@ export function RunAnalysis() {
     (state: RootState) => state.analysis,
   )
   const { files } = useSelector((state: RootState) => state.file)
-  const [customLayerType, setCustomLayerType] = useState("")
 
-  // Fetch and categorize files when component mounts
+  // State for new layer type and file selection
+  const [newLayerType, setNewLayerType] = useState("")
+  const [customLayerType, setCustomLayerType] = useState("")
+  const [selectedFileId, setSelectedFileId] = useState<string>("")
+
+  // Fetch files when component mounts
   useEffect(() => {
     if (currentProject?.id) {
+      dispatch(fetchProjectFiles(currentProject.id))
       dispatch(categorizeFilesByLayerType(currentProject.id))
     }
   }, [dispatch, currentProject?.id])
@@ -102,13 +106,48 @@ export function RunAnalysis() {
   }
 
   const handleAddNormalizationLayer = () => {
-    if (customLayerType.trim() !== "") {
-      dispatch(addNormalizationLayer({ layerType: customLayerType.trim(), fileId: null }))
-      setCustomLayerType("")
-    } else {
-      toast.error("Please enter a layer type")
+    // Get the final layer type (either selected or custom)
+    const finalLayerType = newLayerType === "other" ? customLayerType.trim() : newLayerType.trim()
+
+    // Validate inputs
+    if (!finalLayerType) {
+      toast.error("Please select or enter a layer type")
+      return
     }
+
+    if (!selectedFileId) {
+      toast.error("Please select a file")
+      return
+    }
+
+    // Add the new layer to the configuration
+    dispatch(
+      addNormalizationLayer({
+        layerType: finalLayerType,
+        fileId: selectedFileId ? Number.parseInt(selectedFileId) : null,
+      }),
+    )
+
+    // Reset form fields
+    setNewLayerType("")
+    setCustomLayerType("")
+    setSelectedFileId("")
   }
+
+  // Predefined normalization layer types
+  const predefinedLayerTypes = [
+    { value: "buildings", label: "Buildings" },
+    { value: "landuse", label: "Land Use" },
+    { value: "poisPoint", label: "POIs (Point)" },
+    { value: "poisPolygon", label: "POIs (Polygon)" },
+    { value: "roads", label: "Roads" },
+    { value: "trafficPoint", label: "Traffic (Point)" },
+    { value: "trafficPolygon", label: "Traffic (Polygon)" },
+    { value: "transportPoint", label: "Transport (Point)" },
+    { value: "transportPolygon", label: "Transport (Polygon)" },
+    { value: "population", label: "Population" },
+    { value: "other", label: "Other (Custom)" },
+  ]
 
   // Get all boundary files
   const boundaryFiles = files.filter(
@@ -135,21 +174,6 @@ export function RunAnalysis() {
   }
 
   const boundaryAttributes = getBoundaryAttributes()
-
-  // Predefined normalization layer types
-  const predefinedLayerTypes = [
-    "buildings",
-    "landuse",
-    "poisPoint",
-    "poisPolygon",
-    "roads",
-    "trafficPoint",
-    "trafficPolygon",
-    "transportPoint",
-    "transportPolygon",
-    "population",
-    "other",
-  ]
 
   // Weight configuration items
   const weightItems = [
@@ -191,7 +215,7 @@ export function RunAnalysis() {
                     <SelectValue placeholder={`Select ${layerType} file`} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {files.map((file) => (
                       <SelectItem key={file.id} value={file.id.toString()}>
                         {file.name}
@@ -212,36 +236,63 @@ export function RunAnalysis() {
           ))}
 
           {/* Add new normalization layer */}
-          <div className="flex items-end gap-4 pt-4 border-t">
-            <div className="flex-1">
-              <Label htmlFor="new-layer-type" className="mb-2 block">
-                Add New Layer Type
-              </Label>
-              <div className="flex gap-2">
-                <Select value={customLayerType} onValueChange={setCustomLayerType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select or enter layer type" />
+          <div className="pt-4 border-t">
+            <h4 className="text-sm font-medium mb-4">Add New Layer</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="new-layer-type" className="mb-2 block">
+                  Layer Type
+                </Label>
+                <Select value={newLayerType} onValueChange={setNewLayerType}>
+                  <SelectTrigger id="new-layer-type">
+                    <SelectValue placeholder="Select layer type" />
                   </SelectTrigger>
                   <SelectContent>
                     {predefinedLayerTypes
-                      .filter((type) => !Object.keys(config.normalization).includes(type))
+                      .filter((type) => !Object.keys(config.normalization).includes(type.value))
                       .map((type) => (
-                        <SelectItem key={type} value={type || ""}>
-                          {type}
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
                         </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
-                {customLayerType === "other" && (
-                  <Input
-                    placeholder="Enter custom layer type"
-                    value={customLayerType === "other" ? "" : customLayerType}
-                    onChange={(e) => setCustomLayerType(e.target.value)}
-                  />
+
+                {newLayerType === "other" && (
+                  <div className="mt-2">
+                    <Input
+                      placeholder="Enter custom layer type"
+                      value={customLayerType}
+                      onChange={(e) => setCustomLayerType(e.target.value)}
+                    />
+                  </div>
                 )}
               </div>
+
+              <div>
+                <Label htmlFor="new-file" className="mb-2 block">
+                  File
+                </Label>
+                <Select value={selectedFileId} onValueChange={setSelectedFileId}>
+                  <SelectTrigger id="new-file">
+                    <SelectValue placeholder="Select file" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {files.map((file) => (
+                      <SelectItem key={file.id} value={file.id.toString()}>
+                        {file.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <Button onClick={handleAddNormalizationLayer}>
+
+            <Button
+              className="mt-4"
+              onClick={handleAddNormalizationLayer}
+              disabled={!newLayerType || (newLayerType === "other" && !customLayerType) || !selectedFileId}
+            >
               <Plus className="h-4 w-4 mr-2" /> Add Layer
             </Button>
           </div>
@@ -284,7 +335,7 @@ export function RunAnalysis() {
                   <SelectValue placeholder="Select attribute" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {boundaryAttributes.map((attr) => (
                     <SelectItem key={attr} value={attr}>
                       {attr}

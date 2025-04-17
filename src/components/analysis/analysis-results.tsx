@@ -1,22 +1,25 @@
-"use client"
-
-import { useEffect } from "react"
+import { useEffect,useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "@tanstack/react-router"
 import { Button } from "../../components/ui/button"
+
+import { Checkbox } from "../../components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { Badge } from "../../components/ui/badge"
-import { Download, FileJson, Clock, Calendar, User, ArrowLeft } from "lucide-react"
+import { Download, FileJson, Clock, Calendar, User, ArrowLeft ,Map} from "lucide-react"
 import { toast } from "sonner"
 import type { AppDispatch, RootState } from "../../store"
 import { fetchAnalysisResults, fetchAnalysisResult, setCurrentResult } from "../../store/analysis/analysisSlice"
+// import {addLayerGroup, addLayer} from "../../store/map/layerSlice"
 
 export function AnalysisResults() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const { currentProject } = useSelector((state: RootState) => state.project)
   const { results, currentResult, loading, error } = useSelector((state: RootState) => state.analysis)
+  // State for tracking which output files are selected for rendering
+  const [selectedOutputFiles, setSelectedOutputFiles] = useState<string[]>([])
 
   // Fetch analysis results when component mounts
   useEffect(() => {
@@ -36,6 +39,8 @@ export function AnalysisResults() {
 
   const handleViewResult = (resultId: string) => {
     dispatch(fetchAnalysisResult(resultId))
+     // Reset selected output files when viewing a new result
+     setSelectedOutputFiles([])
   }
 
   const handleDownloadFile = (filePath: string) => {
@@ -52,6 +57,75 @@ export function AnalysisResults() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  const handleToggleRenderFile = (filePath: string) => {
+    setSelectedOutputFiles((prev) => {
+      if (prev.includes(filePath)) {
+        return prev.filter((path) => path !== filePath)
+      } else {
+        return [...prev, filePath]
+      }
+    })
+  }
+
+  const handleRenderOnMap = () => {
+    if (selectedOutputFiles.length === 0 || !currentResult) {
+      toast.error("Please select at least one file to render")
+      return
+    }
+
+    // Create a layer group for the analysis result
+    const groupId = `analysis-result-${currentResult.id}`
+    const groupName = `Analysis: ${currentResult.name}`
+
+    // dispatch(
+    //   addLayerGroup({
+    //     id: groupId,
+    //     name: groupName,
+    //     visible: true,
+    //     expanded: true,
+    //   }),
+    // )
+
+    // Add each selected file as a layer
+    selectedOutputFiles.forEach((filePath, index) => {
+      const fileName = filePath.split("/").pop() || `Result ${index + 1}`
+      const layerId = `analysis-layer-${currentResult.id}-${index}`
+
+      // dispatch(
+      //   addLayer({
+      //     id: layerId,
+      //     groupId: groupId,
+      //     name: fileName,
+      //     type: "geojson",
+      //     source: {
+      //       type: "geojson",
+      //       data: `${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}analysis/geojson?path=${encodeURIComponent(filePath)}`,
+      //     },
+      //     visible: true,
+      //     style: {
+      //       fillColor: getRandomColor(),
+      //       fillOpacity: 0.6,
+      //       strokeColor: "#000000",
+      //       strokeWidth: 1,
+      //     },
+      //   }),
+      // )
+    })
+
+    // Navigate to the map view
+    navigate({ to: `/map/${currentProject?.id}` })
+
+    toast.success("Rendering analysis results on map", {
+      description: `Added ${selectedOutputFiles.length} layers to the map`,
+    })
+  }
+
+  // Helper function to generate random colors for layers
+  const getRandomColor = () => {
+    const colors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A8", "#33A8FF", "#A833FF", "#FFD133", "#33FFD1"]
+    return colors[Math.floor(Math.random() * colors.length)]
   }
 
   const formatDate = (dateString: string) => {
@@ -185,13 +259,29 @@ export function AnalysisResults() {
                 )}
 
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Output Files</h3>
+                  {/* <h3 className="text-sm font-medium mb-2">Output Files</h3> */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium">Output Files</h3>
+                    {selectedOutputFiles.length > 0 && (
+                      <Button size="sm" onClick={handleRenderOnMap}>
+                        <Map className="h-4 w-4 mr-2" /> Render on Map
+                      </Button>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     {currentResult.outputFiles.map((file, index) => (
                       <div key={index} className="flex items-center justify-between bg-muted p-3 rounded-md">
                         <div className="flex items-center gap-2">
+                        <Checkbox
+                            id={`render-file-${index}`}
+                            checked={selectedOutputFiles.includes(file)}
+                            onCheckedChange={() => handleToggleRenderFile(file)}
+                          />
+                          <label htmlFor={`render-file-${index}`} className="flex items-center gap-2 cursor-pointer">
                           <FileJson className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">{file.split("/").pop()}</span>
+                          </label>
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => handleDownloadFile(file)}>
                           <Download className="h-4 w-4" />

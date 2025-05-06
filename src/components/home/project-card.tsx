@@ -69,7 +69,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const handleOpenProject = () => {
     // Set the current project before navigating
     dispatch(setCurrentProject(project.id))
-    navigate({ to: `/project/${project.id}` })
+    navigate({ to: `/map/${project.name}` })
   }
 
   const handleDeleteProject = (id: number) => {
@@ -122,12 +122,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
         </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-2">
-        <Button variant="ghost" size="sm" onClick={handleOpenFiles}>
+        {/* <Button variant="ghost" size="sm" onClick={handleOpenFiles}>
           View Files
-        </Button>
-        {/* <Button size="sm" onClick={handleOpenProject}>
-          Open Project
         </Button> */}
+        <Button size="sm" onClick={handleOpenProject}>
+          Open Project
+        </Button>
         {/* <Button variant="destructive" size="sm" onClick={()=>handleDeleteProject(project.id)}>
           <p><Trash2 className="s-4 w-4"/></p>
         </Button> */}

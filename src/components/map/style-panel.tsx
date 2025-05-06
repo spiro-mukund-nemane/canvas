@@ -54,9 +54,11 @@ export function StylePanel({ layer, onClose, onStyleChange }: StylePanelProps) {
   if (!layer) return null
 
   return (
-    <div className="w-80 bg-background border-l h-full">
+    <div className="w-80 bg-background rounded-lg border-l h-full">
       <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="font-semibold">{layer.name}</h2>
+        <div>
+        <h2 className="font-semibold break-words">{layer.name}</h2>
+        </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>

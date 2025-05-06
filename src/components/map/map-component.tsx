@@ -17,8 +17,12 @@ import { useSelector, useDispatch } from "react-redux"
 import type { RootState, AppDispatch } from "../../store"
 import {
   loadSelectedFilesAsLayers,
-  setSelectedFeature,toggleMapStyle
+  setSelectedFeature, toggleMapStyle
 } from "../../store/map/layerSlice"
+import { DistanceMeasureControl } from './distance/distance'
+
+
+
 
 export default function MapComponent() {
   const dispatch = useDispatch<AppDispatch>()
@@ -26,8 +30,7 @@ export default function MapComponent() {
   const { layerGroups, loading, selectedLayerId, selectedFeature, mapStyle } = useSelector(
     (state: RootState) => state.layer,
   )
-
-  // const [mapStyle, setMapStyle] = useState("light"); // default is light
+  
 
   const [viewState, setViewState] = useState({
     longitude: 78.9629,
@@ -38,16 +41,6 @@ export default function MapComponent() {
   const mapRef = useRef<maplibregl.Map | null>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
 
-  // // Load layers from localStorage on component mount
-  // useEffect(() => {
-  //   // dispatch(loadLayersFromLocalStorage())
-
-  //   // Load map style preference
-  //   const savedMapStyle = localStorage.getItem("mapStyle")
-  //   if (savedMapStyle && (savedMapStyle === "light" || savedMapStyle === "dark")) {
-  //     dispatch(toggleMapStyle(savedMapStyle))
-  //   }
-  // }, [dispatch])
 
   // Load selected files as layers when component mounts or selection changes
   useEffect(() => {
@@ -61,12 +54,6 @@ export default function MapComponent() {
     }
   }, [dispatch, files, mapLoaded])
 
-  // // Save layers to localStorage when they change
-  // useEffect(() => {
-  //   if (layerGroups.length > 0) {
-  //     dispatch(saveLayersToLocalStorage())
-  //   }
-  // }, [layerGroups, dispatch])
 
   // Fit map to layers when they change
   useEffect(() => {
@@ -125,99 +112,109 @@ export default function MapComponent() {
     }
   }, [])
 
-  const handleMapLoad = useCallback(
-    (event: any) => {
-      console.log("Map loaded")
-      mapRef.current = event.target
-      setMapLoaded(true)
+ const handleMapLoad = useCallback(
+  (event: any) => {
+    console.log("Map loaded");
+    mapRef.current = event.target;
+    setMapLoaded(true);
 
-      // Add click handler for features
-      mapRef.current.on("click", (e) => {
-        if (!mapRef.current) return
+    // Ensure the style is fully loaded
+    mapRef.current.once("styledata", () => {
+      console.log("Map style fully loaded");
+    });
 
-        // Get all visible layers
-        const visibleLayers = layerGroups
-          .filter((group) => group.visible)
-          .flatMap((group) => group.layers.filter((layer) => layer.visible))
-          .map((layer) => layer.id)
+    // Add click handler for features
+    mapRef.current.on("click", (e) => {
+      if (!mapRef.current) return;
 
-        if (visibleLayers.length === 0) return
+      // Get all visible layers
+      const visibleLayers = layerGroups
+        .filter((group) => group.visible)
+        .flatMap((group) => group.layers.filter((layer) => layer.visible))
+        .map((layer) => layer.id);
 
-        // Query features at click point
-        const features = mapRef.current.queryRenderedFeatures(e.point, {
-          layers: visibleLayers,
-        })
+      if (visibleLayers.length === 0) return;
 
-        if (features.length > 0) {
-          // Store the feature and click coordinates in Redux
-          dispatch(
-            setSelectedFeature({
-              feature: features[0],
-              coordinates: e.lngLat.toArray() as [number, number],
-            }),
-          )
-        } else {
-          dispatch(setSelectedFeature(null))
-        }
-      })
-    },
-    [layerGroups, dispatch],
-  )
+      // Validate that each layer exists in the map's style
+      const existingLayers = visibleLayers.filter((layerId) =>
+        mapRef.current.getLayer(layerId),
+      );
+
+      if (existingLayers.length === 0) return;
+
+      // Query features at click point
+      const features = mapRef.current.queryRenderedFeatures(e.point, {
+        layers: existingLayers,
+      });
+
+      if (features.length > 0) {
+        // Store the feature and click coordinates in Redux
+        dispatch(
+          setSelectedFeature({
+            feature: features[0],
+            coordinates: e.lngLat.toArray() as [number, number],
+          }),
+        );
+      } else {
+        dispatch(setSelectedFeature(null));
+      }
+    });
+  },
+  [layerGroups, dispatch],
+);
 
   const renderLayers = useCallback(() => {
     return layerGroups
       .flatMap((group) =>
         group.visible
           ? group.layers.map((layer) => {
-              if (!layer.visible || !layer.data) return null
+            if (!layer.visible || !layer.data) return null
 
-              const layerStyle = {
-                // Circle (Point) style
-                "circle-radius": layer.mapLayerType === "circle" ? layer.style.size : undefined,
-                "circle-color": layer.mapLayerType === "circle" ? layer.style.color : undefined,
-                "circle-opacity": layer.mapLayerType === "circle" ? layer.style.opacity : undefined,
-                "circle-stroke-color": layer.mapLayerType === "circle" ? layer.style.stroke : undefined,
-                "circle-stroke-width": layer.mapLayerType === "circle" ? layer.style.strokeWidth : undefined,
+            const layerStyle = {
+              // Circle (Point) style
+              "circle-radius": layer.mapLayerType === "circle" ? layer.style.size : undefined,
+              "circle-color": layer.mapLayerType === "circle" ? layer.style.color : undefined,
+              "circle-opacity": layer.mapLayerType === "circle" ? layer.style.opacity : undefined,
+              "circle-stroke-color": layer.mapLayerType === "circle" ? layer.style.stroke : undefined,
+              "circle-stroke-width": layer.mapLayerType === "circle" ? layer.style.strokeWidth : undefined,
 
-                // Line style
-                "line-color": layer.mapLayerType === "line" ? layer.style.color : undefined,
-                "line-width": layer.mapLayerType === "line" ? layer.style.strokeWidth : undefined,
-                "line-opacity": layer.mapLayerType === "line" ? layer.style.opacity : undefined,
+              // Line style
+              "line-color": layer.mapLayerType === "line" ? layer.style.color : undefined,
+              "line-width": layer.mapLayerType === "line" ? layer.style.strokeWidth : undefined,
+              "line-opacity": layer.mapLayerType === "line" ? layer.style.opacity : undefined,
 
-                // Fill (Polygon) style
-                "fill-color": layer.mapLayerType === "fill" ? layer.style.color : undefined,
-                "fill-opacity": layer.mapLayerType === "fill" ? layer.style.opacity : undefined,
-                "fill-outline-color": layer.mapLayerType === "fill" ? layer.style.stroke : undefined,
-              }
+              // Fill (Polygon) style
+              "fill-color": layer.mapLayerType === "fill" ? layer.style.color : undefined,
+              "fill-opacity": layer.mapLayerType === "fill" ? layer.style.opacity : undefined,
+              "fill-outline-color": layer.mapLayerType === "fill" ? layer.style.stroke : undefined,
+            }
 
-              // Remove undefined properties
-              Object.keys(layerStyle).forEach((key) => layerStyle[key] === undefined && delete layerStyle[key])
+            // Remove undefined properties
+            Object.keys(layerStyle).forEach((key) => layerStyle[key] === undefined && delete layerStyle[key])
 
-              return (
-                <Source key={layer.id} type="geojson" data={layer.data}>
-                  <Layer id={layer.id} type={layer.mapLayerType} paint={layerStyle} />
-                </Source>
-              )
-            })
+            return (
+              <Source key={layer.id} type="geojson" data={layer.data}>
+                <Layer id={layer.id} type={layer.mapLayerType} paint={layerStyle} />
+              </Source>
+            )
+          })
           : [],
       )
       .filter(Boolean)
   }, [layerGroups])
 
-  // Get the appropriate map style URL based on the current theme
-  // const getMapStyleUrl = () => {
-  //   return mapStyle === "dark"
-  //     ? "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-  //     : `${import.meta.env.SPIRO_MAPS_STYLE_API_URL}?key=${import.meta.env.KEY}`
-  // }
-
   const getMapStyleUrl = () => {
     if (mapStyle === "dark") {
-      return "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+      return `${import.meta.env.VITE_SPIRO_MAPS_DARK_STYLE_API_URL}`;
     } else {
-      return `${import.meta.env.VITE_SPIRO_MAPS_STYLE_API_URL}?key=${import.meta.env.VITE_SPIRO_MAPS_STYLE_API_KEY}`;
+      return `${import.meta.env.VITE_SPIRO_MAPS_LIGHT_STYLE_API_URL}?key=${import.meta.env.VITE_SPIRO_MAPS_STYLE_API_KEY}`;
     }
   };
+
+  const apiUrl = import.meta.env.VITE_SPIRO_MAPS_DIRECTIONS_API_URL;
+  const apiKey = import.meta.env.VITE_SPIRO_MAPS_DIRECTIONS_API_KEY;
+
+
 
   return (
     <div style={{ height: "100vh" }}>
@@ -232,6 +229,7 @@ export default function MapComponent() {
         </div>
       )}
 
+
       <Map
         ref={mapRef}
         mapStyle={getMapStyleUrl()}
@@ -245,14 +243,17 @@ export default function MapComponent() {
         <GeolocateControl position="bottom-right" />
 
         {/* Attribution */}
-      {/* <AttributionControl
+        {/* <AttributionControl
         compact={false}
         customAttribution={'<a href="https://www.spironet.com/">© Spiro</a>'}
         position={"bottom-right"}
       /> */}
         <img className="absolute w-20 h-auto bottom-8 left-4" src={logo} />
-        
+
         {renderLayers()}
+
+        {/* Distance and time calculator */}
+         <DistanceMeasureControl mapRef={mapRef} apiUrl={apiUrl} apiKey={apiKey} />
 
         {/* Render popup at the clicked location */}
         {selectedFeature && (
@@ -280,8 +281,8 @@ export default function MapComponent() {
             </div>
           </Popup>
         )}
+        
       </Map>
-
       <LayerManager />
     </div>
   )

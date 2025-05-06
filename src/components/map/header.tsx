@@ -15,8 +15,14 @@ import {
   Square,
   MousePointer,
   LineChartIcon as LineIcon,
-  Upload,ChevronRight,
+  Upload, ChevronRight, Route, Delete, Ruler, X,
 } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback } from "../ui/avatar"
 import { Button } from "../ui/button"
 import {
@@ -40,17 +46,23 @@ import { fetchFiles, updateFile } from "../../store/file/fileSlice"
 import { loadSelectedFilesAsLayers } from "../../store/map/layerSlice"
 import { Checkbox } from "../ui/checkbox"
 import { ScrollArea } from "../ui/scroll-area"
+import { toggleMeasuring, cancelMeasuring } from '../../store/map/measurementSlice'
+
+
+
 
 export default function Header() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const { currentProject } = useSelector((state: RootState) => state.project)
   const { files, loading } = useSelector((state: RootState) => state.file)
+  const isMeasuring = useSelector((state: RootState) => state.measurement.isMeasuring);
   const [selectFilesDialogOpen, setSelectFilesDialogOpen] = useState(false)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  // const [isMeasuring, setIsMeasuring] = useState(false);
 
   // Fetch files when component mounts or project changes
   useEffect(() => {
@@ -102,12 +114,15 @@ export default function Header() {
     reader.readAsText(selectedFile)
   }
 
+  // const handleBackToProject = () => {
+  //   if (currentProject?.id) {
+  //     navigate({ to: `/project/${currentProject.id}/files` })
+  //   } else {
+  //     navigate({ to: "/" })
+  //   }
+  // }
   const handleBackToProject = () => {
-    if (currentProject?.id) {
-      navigate({ to: `/project/${currentProject.id}/files` })
-    } else {
-      navigate({ to: "/" })
-    }
+    navigate({ to: `/` })
   }
 
   const handleToggleSelect = (id: number, selected: boolean) => {
@@ -159,17 +174,17 @@ export default function Header() {
         {/* <div className="flex items-center gap-2">
           <span>{currentProject?.name || "General"}</span>
         </div> */}
-        <Button variant="ghost" size="sm" className="gap-2">
-              Project <ChevronRight className="h-4 w-4" />
+        {/* <Button variant="ghost" size="sm" className="gap-2">
+          Project <ChevronRight className="h-4 w-4" />
         </Button>
-        <span>{currentProject?.name || "General"}</span>
+        <span>{currentProject?.name || "General"}</span> */}
       </div>
 
       <div className="flex items-center gap-5">
         <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2">
           <div className="flex items-center gap-1">
             {/* Draw Tools Dropdown */}
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <MapPin className="h-5 w-5" />
@@ -195,10 +210,10 @@ export default function Header() {
                   <Pencil className="mr-2 h-4 w-4" /> Freehand
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
 
             {/* Layer Transformation Dropdown */}
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <MapIcon className="h-5 w-5" />
@@ -230,22 +245,43 @@ export default function Header() {
                   <Layers className="mr-2 h-4 w-4" /> Join
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
 
-            <Button variant="ghost" size="icon">
-              <Layers className="h-5 w-5" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={isMeasuring ? "destructive" : "default"}
+                    size='lg'
+                    onClick={() => dispatch(toggleMeasuring())}
+                    className="items-center bg-white text-black hover:bg-white"
+                  >
+                    {isMeasuring ? <X size={18} /> : <Route size={18} />}
+                  </Button>
+                </TooltipTrigger>
+                {/* <TooltipContent className="bg-white text-black border border-gray-300 hover:bg-gray-100">
+                      <p>{isMeasuring ? 'Cancel' : 'Distance and Time Measurement'}</p>
+                    </TooltipContent> */}
+                <TooltipContent className="rounded-md border">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{isMeasuring ? 'Cancel' : 'Distance Measurement'}</p>
+                  </div>
+                </TooltipContent>
+
+              </Tooltip>
+            </TooltipProvider>
+
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <StyleSwitcher />
 
-          <Button variant="ghost" size="icon">
+          {/* <Button variant="ghost" size="icon">
             <Search className="h-5 w-5" />
-          </Button>
+          </Button> */}
 
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <MessageCircle className="h-5 w-5" />
@@ -257,7 +293,7 @@ export default function Header() {
                 <p className="text-muted-foreground">Click on the map to leave a comment</p>
               </div>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

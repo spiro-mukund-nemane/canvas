@@ -111,6 +111,7 @@ export function LayerManager() {
             onRenameGroup={handleRenameGroup}
             onRenameLayer={handleRenameLayer}
             onReorderLayers={handleReorderLayers}
+            selectedLayerId={selectedLayerId}
           />
         </div>
         {selectedLayer && (

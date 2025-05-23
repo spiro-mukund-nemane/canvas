@@ -1,5 +1,3 @@
-
-
 import { useState } from "react"
 import { Button } from "../../components/ui/button"
 import {
@@ -38,7 +36,9 @@ export default function CreateProject() {
         toast.success("Project created",{description: `Project "${projectName}" has been created successfully.`})
 
         // Navigate to the newly created project's files page
-        navigate({ to: `/project/${newProjectId}/files` })
+        // dispatch(setCurrentProject(project.id))
+        // navigate({ to: `/map/${newProjectId}` })
+        navigate({ to: `/` })
       } else {
         throw new Error("Failed to create project")
       }

@@ -1,8 +1,7 @@
-
 import { CollapsibleLegend } from "./collapsible-legend"
-import { StylePanel } from "./style-panel"
+import { StylePanel } from "../layer-style/style-panel"
 import { useSelector, useDispatch } from "react-redux"
-import type { RootState, AppDispatch } from "../../store"
+import type { RootState, AppDispatch } from "../../../store"
 import {
   setSelectedLayerId,
   toggleLayerVisibility,
@@ -15,9 +14,16 @@ import {
   renameLayer,
   reorderLayers,
   addUploadedLayer,
-} from "../../store/map/layerSlice"
+  fitToLayer,
+} from "../../../store/map/layerSlice"
+import type { MutableRefObject } from "react"
+import type { Map as MaplibreMap } from "maplibre-gl"
 
-export function LayerManager() {
+interface LayerManagerProps {
+  mapRef: MutableRefObject<MaplibreMap | null>
+}
+
+export function LayerManager({ mapRef }: LayerManagerProps) {
   const dispatch = useDispatch<AppDispatch>()
   const { layerGroups } = useSelector((state: RootState) => state.layer)
   const selectedLayerId = useSelector((state: RootState) => state.layer.selectedLayerId)
@@ -90,6 +96,10 @@ export function LayerManager() {
     reader.readAsText(file)
   }
 
+  const handleFitToLayer = (layerId: string) => {
+    dispatch(fitToLayer(layerId))
+  }
+
   return (
     <div className="absolute inset-0 pointer-events-none">
       <div className="relative h-full w-full">
@@ -112,6 +122,7 @@ export function LayerManager() {
             onRenameLayer={handleRenameLayer}
             onReorderLayers={handleReorderLayers}
             selectedLayerId={selectedLayerId}
+            onFitToLayer={handleFitToLayer}
           />
         </div>
         {selectedLayer && (
@@ -132,6 +143,3 @@ export function LayerManager() {
     </div>
   )
 }
-
-
-

@@ -43,7 +43,7 @@ import type { AppDispatch, RootState } from "../../store"
 import { addUploadedLayer } from "../../store/map/layerSlice"
 import { useNavigate } from "@tanstack/react-router"
 import { fetchFiles, updateFile } from "../../store/file/fileSlice"
-import { loadSelectedFilesAsLayers } from "../../store/map/layerSlice"
+// import { loadSelectedFilesAsLayers } from "../../store/map/layerSlice"
 import { Checkbox } from "../ui/checkbox"
 import { ScrollArea } from "../ui/scroll-area"
 import { toggleMeasuring, cancelMeasuring } from '../../store/map/measurementSlice'
@@ -64,12 +64,12 @@ export default function Header() {
   const [searchTerm, setSearchTerm] = useState("")
   // const [isMeasuring, setIsMeasuring] = useState(false);
 
-  // Fetch files when component mounts or project changes
-  useEffect(() => {
-    if (currentProject?.id) {
-      dispatch(fetchFiles(currentProject.id))
-    }
-  }, [dispatch, currentProject?.id])
+  // // Fetch files when component mounts or project changes
+  // useEffect(() => {
+  //   if (currentProject?.id) {
+  //     dispatch(fetchFiles(currentProject.id))
+  //   }
+  // }, [dispatch, currentProject?.id])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -129,13 +129,13 @@ export default function Header() {
     dispatch(updateFile({ id, changes: { selected } }))
   }
 
-  const handleApplySelection = () => {
-    const selectedFiles = files.filter((file) => file.selected)
-    if (selectedFiles.length > 0) {
-      dispatch(loadSelectedFilesAsLayers(selectedFiles))
-    }
-    setSelectFilesDialogOpen(false)
-  }
+  // const handleApplySelection = () => {
+  //   const selectedFiles = files.filter((file) => file.selected)
+  //   if (selectedFiles.length > 0) {
+  //     dispatch(loadSelectedFilesAsLayers(selectedFiles))
+  //   }
+  //   setSelectFilesDialogOpen(false)
+  // }
 
   // Filter files based on search
   const filteredFiles = files.filter((file) => {
@@ -317,7 +317,7 @@ export default function Header() {
       </div>
 
       {/* Select Files Dialog */}
-      <Dialog open={selectFilesDialogOpen} onOpenChange={setSelectFilesDialogOpen}>
+      {/* <Dialog open={selectFilesDialogOpen} onOpenChange={setSelectFilesDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Select Files to Visualize</DialogTitle>
@@ -393,7 +393,7 @@ export default function Header() {
             <Button onClick={handleApplySelection}>Apply Selection</Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       {/* Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>

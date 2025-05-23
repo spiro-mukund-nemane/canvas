@@ -1,5 +1,5 @@
 export type GeometryType = "Point" | "Line" | "Polygon"
-export type MapLibreLayerType = "circle" | "line" | "fill"
+export type MapLayerType = "circle" | "line" | "fill" | "raster"
 
 export interface LayerStyle {
   size: number
@@ -13,10 +13,12 @@ export interface Layer {
   id: string
   name: string
   geometryType: GeometryType
-  mapLayerType: MapLibreLayerType
+  mapLayerType: MapLayerType
   visible: boolean
-  data: any // GeoJSON data
+  data?: any // GeoJSON data
+  mbtilesUrl?: string // URL for mbtiles source
   style: LayerStyle
+  fileId?: number
 }
 
 export interface LayerGroup {
@@ -26,3 +28,7 @@ export interface LayerGroup {
   layers: Layer[]
 }
 
+export interface FeatureInfo {
+  feature: any
+  coordinates: [number, number]
+}

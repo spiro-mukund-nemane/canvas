@@ -1,4 +1,6 @@
-import { CalendarIcon, MapPinIcon, ClockIcon, Trash2 } from "lucide-react"
+"use client"
+
+import { CalendarIcon, ClockIcon, Trash2 } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   AlertDialog,
@@ -11,7 +13,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "@tanstack/react-router"
 import { useDispatch } from "react-redux"
@@ -69,11 +70,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const handleOpenProject = () => {
     // Set the current project before navigating
     dispatch(setCurrentProject(project.id))
-    navigate({ to: `/map/${project.name}` })
+    navigate({ to: `/map/${project.id}` })
   }
 
-  const handleDeleteProject = (id: number) => {
-    dispatch(deleteProject(id))
+  const handleDeleteProject = () => {
+    dispatch(deleteProject(project.id))
   }
 
   const handleOpenFiles = () => {
@@ -106,35 +107,16 @@ export function ProjectCard({ project }: ProjectCardProps) {
             <ClockIcon className="mr-2 h-4 w-4" />
             <span>Updated: {formatDate(project.updatedDate)}</span>
           </div>
-          {(project.country || project.region) && (
-            <div className="flex items-center text-muted-foreground">
-              <MapPinIcon className="mr-2 h-4 w-4" />
-              <span>{[project.country, project.region].filter(Boolean).join(", ")}</span>
-            </div>
-          )}
-          {project.fileCount !== undefined && (
-            <div className="mt-2">
-              <Badge variant="outline" className="mr-1">
-                {project.fileCount} {project.fileCount === 1 ? "file" : "files"}
-              </Badge>
-            </div>
-          )}
         </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-2">
-        {/* <Button variant="ghost" size="sm" onClick={handleOpenFiles}>
-          View Files
-        </Button> */}
         <Button size="sm" onClick={handleOpenProject}>
           Open Project
         </Button>
-        {/* <Button variant="destructive" size="sm" onClick={()=>handleDeleteProject(project.id)}>
-          <p><Trash2 className="s-4 w-4"/></p>
-        </Button> */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive">
-              <Trash2 className="s-4 w-4" />
+            <Button variant="destructive" size="sm">
+              <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -146,7 +128,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => handleDeleteProject(project.id)}>Continue</AlertDialogAction>
+              <AlertDialogAction onClick={handleDeleteProject}>Continue</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

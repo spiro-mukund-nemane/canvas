@@ -1,4 +1,4 @@
-"use client"
+
 
 import { useSelector } from "react-redux"
 import { Button } from "../../components/ui/button"

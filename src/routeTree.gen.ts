@@ -16,16 +16,11 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
 import { Route as ProjectNewImport } from './routes/project/new'
 import { Route as MapLayoutImport } from './routes/map/_layout'
-import { Route as ProjectProjectIdLayoutImport } from './routes/project/$projectId/_layout'
 import { Route as MapLayoutMapIdImport } from './routes/map/_layout.$mapId'
-import { Route as ProjectProjectIdLayoutRunAnalysisImport } from './routes/project/$projectId/_layout.run-analysis'
-import { Route as ProjectProjectIdLayoutResultsImport } from './routes/project/$projectId/_layout.results'
-import { Route as ProjectProjectIdLayoutFilesImport } from './routes/project/$projectId/_layout.files'
 
 // Create Virtual Routes
 
 const MapImport = createFileRoute('/map')()
-const ProjectProjectIdImport = createFileRoute('/project/$projectId')()
 
 // Create/Update Routes
 
@@ -41,12 +36,6 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const ProjectProjectIdRoute = ProjectProjectIdImport.update({
-  id: '/project/$projectId',
-  path: '/project/$projectId',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const ProjectNewRoute = ProjectNewImport.update({
   id: '/project/new',
   path: '/project/new',
@@ -58,37 +47,11 @@ const MapLayoutRoute = MapLayoutImport.update({
   getParentRoute: () => MapRoute,
 } as any)
 
-const ProjectProjectIdLayoutRoute = ProjectProjectIdLayoutImport.update({
-  id: '/_layout',
-  getParentRoute: () => ProjectProjectIdRoute,
-} as any)
-
 const MapLayoutMapIdRoute = MapLayoutMapIdImport.update({
   id: '/$mapId',
   path: '/$mapId',
   getParentRoute: () => MapLayoutRoute,
 } as any)
-
-const ProjectProjectIdLayoutRunAnalysisRoute =
-  ProjectProjectIdLayoutRunAnalysisImport.update({
-    id: '/run-analysis',
-    path: '/run-analysis',
-    getParentRoute: () => ProjectProjectIdLayoutRoute,
-  } as any)
-
-const ProjectProjectIdLayoutResultsRoute =
-  ProjectProjectIdLayoutResultsImport.update({
-    id: '/results',
-    path: '/results',
-    getParentRoute: () => ProjectProjectIdLayoutRoute,
-  } as any)
-
-const ProjectProjectIdLayoutFilesRoute =
-  ProjectProjectIdLayoutFilesImport.update({
-    id: '/files',
-    path: '/files',
-    getParentRoute: () => ProjectProjectIdLayoutRoute,
-  } as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -129,41 +92,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MapLayoutMapIdImport
       parentRoute: typeof MapLayoutImport
     }
-    '/project/$projectId': {
-      id: '/project/$projectId'
-      path: '/project/$projectId'
-      fullPath: '/project/$projectId'
-      preLoaderRoute: typeof ProjectProjectIdImport
-      parentRoute: typeof rootRoute
-    }
-    '/project/$projectId/_layout': {
-      id: '/project/$projectId/_layout'
-      path: '/project/$projectId'
-      fullPath: '/project/$projectId'
-      preLoaderRoute: typeof ProjectProjectIdLayoutImport
-      parentRoute: typeof ProjectProjectIdRoute
-    }
-    '/project/$projectId/_layout/files': {
-      id: '/project/$projectId/_layout/files'
-      path: '/files'
-      fullPath: '/project/$projectId/files'
-      preLoaderRoute: typeof ProjectProjectIdLayoutFilesImport
-      parentRoute: typeof ProjectProjectIdLayoutImport
-    }
-    '/project/$projectId/_layout/results': {
-      id: '/project/$projectId/_layout/results'
-      path: '/results'
-      fullPath: '/project/$projectId/results'
-      preLoaderRoute: typeof ProjectProjectIdLayoutResultsImport
-      parentRoute: typeof ProjectProjectIdLayoutImport
-    }
-    '/project/$projectId/_layout/run-analysis': {
-      id: '/project/$projectId/_layout/run-analysis'
-      path: '/run-analysis'
-      fullPath: '/project/$projectId/run-analysis'
-      preLoaderRoute: typeof ProjectProjectIdLayoutRunAnalysisImport
-      parentRoute: typeof ProjectProjectIdLayoutImport
-    }
   }
 }
 
@@ -191,45 +119,11 @@ const MapRouteChildren: MapRouteChildren = {
 
 const MapRouteWithChildren = MapRoute._addFileChildren(MapRouteChildren)
 
-interface ProjectProjectIdLayoutRouteChildren {
-  ProjectProjectIdLayoutFilesRoute: typeof ProjectProjectIdLayoutFilesRoute
-  ProjectProjectIdLayoutResultsRoute: typeof ProjectProjectIdLayoutResultsRoute
-  ProjectProjectIdLayoutRunAnalysisRoute: typeof ProjectProjectIdLayoutRunAnalysisRoute
-}
-
-const ProjectProjectIdLayoutRouteChildren: ProjectProjectIdLayoutRouteChildren =
-  {
-    ProjectProjectIdLayoutFilesRoute: ProjectProjectIdLayoutFilesRoute,
-    ProjectProjectIdLayoutResultsRoute: ProjectProjectIdLayoutResultsRoute,
-    ProjectProjectIdLayoutRunAnalysisRoute:
-      ProjectProjectIdLayoutRunAnalysisRoute,
-  }
-
-const ProjectProjectIdLayoutRouteWithChildren =
-  ProjectProjectIdLayoutRoute._addFileChildren(
-    ProjectProjectIdLayoutRouteChildren,
-  )
-
-interface ProjectProjectIdRouteChildren {
-  ProjectProjectIdLayoutRoute: typeof ProjectProjectIdLayoutRouteWithChildren
-}
-
-const ProjectProjectIdRouteChildren: ProjectProjectIdRouteChildren = {
-  ProjectProjectIdLayoutRoute: ProjectProjectIdLayoutRouteWithChildren,
-}
-
-const ProjectProjectIdRouteWithChildren =
-  ProjectProjectIdRoute._addFileChildren(ProjectProjectIdRouteChildren)
-
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/map': typeof MapLayoutRouteWithChildren
   '/project/new': typeof ProjectNewRoute
   '/map/$mapId': typeof MapLayoutMapIdRoute
-  '/project/$projectId': typeof ProjectProjectIdLayoutRouteWithChildren
-  '/project/$projectId/files': typeof ProjectProjectIdLayoutFilesRoute
-  '/project/$projectId/results': typeof ProjectProjectIdLayoutResultsRoute
-  '/project/$projectId/run-analysis': typeof ProjectProjectIdLayoutRunAnalysisRoute
 }
 
 export interface FileRoutesByTo {
@@ -237,10 +131,6 @@ export interface FileRoutesByTo {
   '/map': typeof MapLayoutRouteWithChildren
   '/project/new': typeof ProjectNewRoute
   '/map/$mapId': typeof MapLayoutMapIdRoute
-  '/project/$projectId': typeof ProjectProjectIdLayoutRouteWithChildren
-  '/project/$projectId/files': typeof ProjectProjectIdLayoutFilesRoute
-  '/project/$projectId/results': typeof ProjectProjectIdLayoutResultsRoute
-  '/project/$projectId/run-analysis': typeof ProjectProjectIdLayoutRunAnalysisRoute
 }
 
 export interface FileRoutesById {
@@ -250,34 +140,13 @@ export interface FileRoutesById {
   '/map/_layout': typeof MapLayoutRouteWithChildren
   '/project/new': typeof ProjectNewRoute
   '/map/_layout/$mapId': typeof MapLayoutMapIdRoute
-  '/project/$projectId': typeof ProjectProjectIdRouteWithChildren
-  '/project/$projectId/_layout': typeof ProjectProjectIdLayoutRouteWithChildren
-  '/project/$projectId/_layout/files': typeof ProjectProjectIdLayoutFilesRoute
-  '/project/$projectId/_layout/results': typeof ProjectProjectIdLayoutResultsRoute
-  '/project/$projectId/_layout/run-analysis': typeof ProjectProjectIdLayoutRunAnalysisRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/map'
-    | '/project/new'
-    | '/map/$mapId'
-    | '/project/$projectId'
-    | '/project/$projectId/files'
-    | '/project/$projectId/results'
-    | '/project/$projectId/run-analysis'
+  fullPaths: '/' | '/map' | '/project/new' | '/map/$mapId'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/map'
-    | '/project/new'
-    | '/map/$mapId'
-    | '/project/$projectId'
-    | '/project/$projectId/files'
-    | '/project/$projectId/results'
-    | '/project/$projectId/run-analysis'
+  to: '/' | '/map' | '/project/new' | '/map/$mapId'
   id:
     | '__root__'
     | '/'
@@ -285,11 +154,6 @@ export interface FileRouteTypes {
     | '/map/_layout'
     | '/project/new'
     | '/map/_layout/$mapId'
-    | '/project/$projectId'
-    | '/project/$projectId/_layout'
-    | '/project/$projectId/_layout/files'
-    | '/project/$projectId/_layout/results'
-    | '/project/$projectId/_layout/run-analysis'
   fileRoutesById: FileRoutesById
 }
 
@@ -297,14 +161,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MapRoute: typeof MapRouteWithChildren
   ProjectNewRoute: typeof ProjectNewRoute
-  ProjectProjectIdRoute: typeof ProjectProjectIdRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MapRoute: MapRouteWithChildren,
   ProjectNewRoute: ProjectNewRoute,
-  ProjectProjectIdRoute: ProjectProjectIdRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -319,8 +181,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/map",
-        "/project/new",
-        "/project/$projectId"
+        "/project/new"
       ]
     },
     "/": {
@@ -345,33 +206,6 @@ export const routeTree = rootRoute
     "/map/_layout/$mapId": {
       "filePath": "map/_layout.$mapId.tsx",
       "parent": "/map/_layout"
-    },
-    "/project/$projectId": {
-      "filePath": "project/$projectId",
-      "children": [
-        "/project/$projectId/_layout"
-      ]
-    },
-    "/project/$projectId/_layout": {
-      "filePath": "project/$projectId/_layout.tsx",
-      "parent": "/project/$projectId",
-      "children": [
-        "/project/$projectId/_layout/files",
-        "/project/$projectId/_layout/results",
-        "/project/$projectId/_layout/run-analysis"
-      ]
-    },
-    "/project/$projectId/_layout/files": {
-      "filePath": "project/$projectId/_layout.files.tsx",
-      "parent": "/project/$projectId/_layout"
-    },
-    "/project/$projectId/_layout/results": {
-      "filePath": "project/$projectId/_layout.results.tsx",
-      "parent": "/project/$projectId/_layout"
-    },
-    "/project/$projectId/_layout/run-analysis": {
-      "filePath": "project/$projectId/_layout.run-analysis.tsx",
-      "parent": "/project/$projectId/_layout"
     }
   }
 }

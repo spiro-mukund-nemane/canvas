@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/tool
 
 // Match the new API response structure
 export interface Project {
-  id: number
+  id: string
   name: string
 }
 
@@ -68,7 +68,7 @@ export const updateProject = createAsyncThunk(
   },
 )
 
-export const deleteProject = createAsyncThunk("project/deleteProject", async (projectId: string | number) => {
+export const deleteProject = createAsyncThunk("project/deleteProject", async (projectId: string) => {
   const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects/${projectId}`, {
     method: "DELETE",
   })
@@ -82,7 +82,7 @@ const projectSlice = createSlice({
   name: "project",
   initialState,
   reducers: {
-    setCurrentProject: (state, action: PayloadAction<number>) => {
+    setCurrentProject: (state, action: PayloadAction<string>) => {
       // Find the project by ID
       const project = state.projects.find((p) => p.id === action.payload)
       if (project) {
@@ -126,28 +126,28 @@ const projectSlice = createSlice({
       .addCase(fetchProjects.fulfilled, (state, action) => {
         state.loading = false
 
+        // Assuming action.payload has the API response
+        const projects = action.payload.data // Extract only the 'data' array
+
         // If we have a current project, make sure it stays at the top
         if (state.currentProject) {
           const currentProjectId = state.currentProject.id
-          const currentProjectInNewList = action.payload.find((p: Project) => p.id === currentProjectId)
+          const currentProjectInNewList = projects.find((p: Project) => p.id === currentProjectId)
 
           if (currentProjectInNewList) {
-            state.projects = [
-              currentProjectInNewList,
-              ...action.payload.filter((p: Project) => p.id !== currentProjectId),
-            ]
+            state.projects = [currentProjectInNewList, ...projects.filter((p: Project) => p.id !== currentProjectId)]
             // Update the current project with the latest data
             state.currentProject = currentProjectInNewList
           } else {
-            state.projects = action.payload
+            state.projects = projects
             // If current project no longer exists, reset it
-            state.currentProject = action.payload.length > 0 ? action.payload[0] : null
+            state.currentProject = projects.length > 0 ? projects[0] : null
           }
         } else {
-          state.projects = action.payload
+          state.projects = projects
           // If there's no current project but we have projects, set the first one
-          if (action.payload.length > 0) {
-            state.currentProject = action.payload[0]
+          if (projects.length > 0) {
+            state.currentProject = projects[0]
           }
         }
       })
@@ -181,7 +181,7 @@ const projectSlice = createSlice({
       })
       // Delete Project
       .addCase(deleteProject.fulfilled, (state, action) => {
-        const projectId = typeof action.payload === "string" ? Number.parseInt(action.payload) : action.payload
+        const projectId = action.payload
         state.projects = state.projects.filter((project) => project.id !== projectId)
         if (state.currentProject?.id === projectId) {
           state.currentProject = state.projects.length > 0 ? state.projects[0] : null

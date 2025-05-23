@@ -1,5 +1,5 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
-import type { LayerGroup, Layer, LayerStyle } from "../../components/map/map-types"
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import type { LayerGroup, Layer, LayerStyle, FeatureInfo } from "../../components/map/map-types"
 import { v4 as uuidv4 } from "uuid"
 
 // Helper function to determine geometry type from GeoJSON
@@ -48,11 +48,6 @@ function getRandomStrokeColor() {
     .padEnd(6, "0")}`
 }
 
-export interface FeatureInfo {
-  feature: any
-  coordinates: [number, number]
-}
-
 interface LayerState {
   layerGroups: LayerGroup[]
   selectedLayerId: string | null
@@ -60,7 +55,7 @@ interface LayerState {
   error: string | null
   selectedFeature: FeatureInfo | null
   mapStyle: "light" | "dark"
-  selectedFileIds: number[]
+  fitToLayerId: string | null
 }
 
 const initialState: LayerState = {
@@ -70,43 +65,8 @@ const initialState: LayerState = {
   error: null,
   selectedFeature: null,
   mapStyle: "light",
-  selectedFileIds: [],
+  fitToLayerId: null,
 }
-
-// Async thunks
-export const fetchFileGeoJSON = createAsyncThunk("layer/fetchFileGeoJSON", async (fileId: number, { getState }) => {
-  const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}files/${fileId}/geojson`)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch GeoJSON: ${response.status} ${response.statusText}`)
-  }
-  const geoJSON = await response.json()
-
-  // Find the file in the state to get its name
-  const state = getState() as any
-  const file = state.file.files.find((f: any) => f.id === fileId)
-  const fileName = file?.name || `File ${fileId}`
-
-  return { fileId, geoJSON, fileName }
-})
-
-export const loadSelectedFilesAsLayers = createAsyncThunk(
-  "layer/loadSelectedFilesAsLayers",
-  async (fileIds: number[], { dispatch }) => {
-    dispatch(setLoading(true))
-
-    try {
-      // Create an array of promises to fetch GeoJSON for each file
-      const promises = fileIds.map((fileId) => dispatch(fetchFileGeoJSON(fileId)))
-
-      // Wait for all promises to resolve
-      await Promise.all(promises)
-
-      return fileIds
-    } finally {
-      dispatch(setLoading(false))
-    }
-  },
-)
 
 const layerSlice = createSlice({
   name: "layer",
@@ -237,85 +197,67 @@ const layerSlice = createSlice({
         }
       }
     },
-    addUploadedLayer: (state, action: PayloadAction<{ geoJSON: any; fileName: string }>) => {
-      const { geoJSON, fileName } = action.payload
+    addUploadedLayer: (
+      state,
+      action: PayloadAction<{
+        geoJSON?: any
+        fileName: string
+        mbtilesUrl?: string
+        layerType?: "geojson" | "mbtiles"
+        fileId?: string
+      }>,
+    ) => {
+      const { geoJSON, fileName, mbtilesUrl, layerType = "geojson", fileId } = action.payload
+      let newLayerId = ""
 
-      // Detect geometry type
-      const geometryType = detectGeometryType(geoJSON)
-      const mapLayerType = getMapLibreLayerType(geometryType)
-
-      // Generate a random color
-      const randomColor = getRandomColor()
-      const randomStrokeColor = getRandomStrokeColor()
-
-      // Create a new layer
-      const newLayer: Layer = {
-        id: `layer-${uuidv4()}`,
-        name: fileName.replace(/\.[^/.]+$/, ""),
-        geometryType,
-        mapLayerType,
-        visible: true,
-        data: geoJSON,
-        style: {
-          size: 6,
-          color: randomColor,
-          opacity: 0.8,
-          stroke: randomStrokeColor,
-          strokeWidth: 0.5,
-        },
-      }
-
-      // Find or create the "Uploaded" group
-      const uploadedGroupIndex = state.layerGroups.findIndex((g) => g.id === "uploaded")
-
-      if (uploadedGroupIndex !== -1) {
-        state.layerGroups[uploadedGroupIndex].layers.push(newLayer)
-      } else {
-        state.layerGroups.push({
-          id: "uploaded",
-          name: "Uploaded Layers",
+      // For MBTiles layers
+      if (layerType === "mbtiles" && mbtilesUrl) {
+        newLayerId = `layer-${uuidv4()}`
+        const newLayer: Layer = {
+          id: newLayerId,
+          name: fileName.replace(/\.[^/.]+$/, ""),
+          geometryType: "Polygon", // Default for vector tiles
+          mapLayerType: "fill", // Default to fill, but could be any vector type
           visible: true,
-          layers: [newLayer],
-        })
-      }
-    },
-    setSelectedFeature: (state, action: PayloadAction<FeatureInfo | null>) => {
-      state.selectedFeature = action.payload
-    },
-    toggleMapStyle: (state) => {
-      state.mapStyle = state.mapStyle === "light" ? "dark" : "light"
-      // Save preference to localStorage
-      localStorage.setItem("mapStyle", state.mapStyle)
-    },
-    setMapStyle: (state, action: PayloadAction<"light" | "dark">) => {
-      state.mapStyle = action.payload
-    },
-    setSelectedFileIds: (state, action: PayloadAction<number[]>) => {
-      state.selectedFileIds = action.payload
-    },
-  },
-  extraReducers: (builder) => {
-    builder
-      // Fetch File GeoJSON
-      .addCase(fetchFileGeoJSON.pending, (state) => {
-        state.loading = true
-      })
-      .addCase(fetchFileGeoJSON.fulfilled, (state, action) => {
-        const { fileId, geoJSON, fileName } = action.payload
+          mbtilesUrl,
+          style: {
+            size: 6,
+            color: getRandomColor(),
+            opacity: 0.8,
+            stroke: getRandomStrokeColor(),
+            strokeWidth: 0.5,
+          },
+          fileId,
+        }
 
+        // Find or create the "Uploaded" group
+        const uploadedGroupIndex = state.layerGroups.findIndex((g) => g.id === "uploaded")
+
+        if (uploadedGroupIndex !== -1) {
+          state.layerGroups[uploadedGroupIndex].layers.push(newLayer)
+        } else {
+          state.layerGroups.push({
+            id: "uploaded",
+            name: "Uploaded Layers",
+            visible: true,
+            layers: [newLayer],
+          })
+        }
+      }
+      // For GeoJSON layers
+      else if (geoJSON) {
         // Detect geometry type
         const geometryType = detectGeometryType(geoJSON)
         const mapLayerType = getMapLibreLayerType(geometryType)
 
         // Generate a random color
-         // Generate a random color
-      const randomColor = getRandomColor()
-      const randomStrokeColor = getRandomStrokeColor()
-
+        const randomColor = getRandomColor()
+        const randomStrokeColor = getRandomStrokeColor()
 
         // Create a new layer
+        newLayerId = `layer-${uuidv4()}`
         const newLayer: Layer = {
-          id: `layer-${fileId}`,
+          id: newLayerId,
           name: fileName.replace(/\.[^/.]+$/, ""),
           geometryType,
           mapLayerType,
@@ -331,48 +273,38 @@ const layerSlice = createSlice({
           fileId,
         }
 
-        // Find or create the "Selected Files" group
-        const selectedFilesGroupIndex = state.layerGroups.findIndex((g) => g.id === "selected-files")
+        // Find or create the "Uploaded" group
+        const uploadedGroupIndex = state.layerGroups.findIndex((g) => g.id === "uploaded")
 
-        if (selectedFilesGroupIndex !== -1) {
-          // Check if layer with this fileId already exists
-          const existingLayerIndex = state.layerGroups[selectedFilesGroupIndex].layers.findIndex(
-            (layer) => layer.fileId === fileId,
-          )
-
-          if (existingLayerIndex !== -1) {
-            // Update existing layer
-            state.layerGroups[selectedFilesGroupIndex].layers[existingLayerIndex] = newLayer
-          } else {
-            // Add new layer at the beginning of the array (so it renders on top)
-            state.layerGroups[selectedFilesGroupIndex].layers.unshift(newLayer)
-          }
+        if (uploadedGroupIndex !== -1) {
+          state.layerGroups[uploadedGroupIndex].layers.push(newLayer)
         } else {
-          // Create new group with this layer
           state.layerGroups.push({
-            id: "selected-files",
-            name: "Selected Files",
+            id: "uploaded",
+            name: "Uploaded Layers",
             visible: true,
             layers: [newLayer],
           })
         }
-      })
-      .addCase(fetchFileGeoJSON.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.error.message || "Failed to fetch GeoJSON"
-      })
-      // Load Selected Files As Layers
-      .addCase(loadSelectedFilesAsLayers.pending, (state) => {
-        state.loading = true
-      })
-      .addCase(loadSelectedFilesAsLayers.fulfilled, (state, action) => {
-        state.loading = false
-        state.selectedFileIds = action.payload
-      })
-      .addCase(loadSelectedFilesAsLayers.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.error.message || "Failed to load selected files"
-      })
+      }
+    },
+    setSelectedFeature: (state, action: PayloadAction<FeatureInfo | null>) => {
+      state.selectedFeature = action.payload
+    },
+    toggleMapStyle: (state) => {
+      state.mapStyle = state.mapStyle === "light" ? "dark" : "light"
+      // Save preference to localStorage
+      localStorage.setItem("mapStyle", state.mapStyle)
+    },
+    setMapStyle: (state, action: PayloadAction<"light" | "dark">) => {
+      state.mapStyle = action.payload
+    },
+    fitToLayer: (state, action: PayloadAction<string>) => {
+      state.fitToLayerId = action.payload
+    },
+    clearFitToLayer: (state) => {
+      state.fitToLayerId = null
+    },
   },
 })
 
@@ -393,7 +325,8 @@ export const {
   setSelectedFeature,
   toggleMapStyle,
   setMapStyle,
-  setSelectedFileIds,
+  fitToLayer,
+  clearFitToLayer,
 } = layerSlice.actions
 
 export default layerSlice.reducer

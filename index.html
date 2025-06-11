@@ -3,6 +3,148 @@
   <head>
     <meta charset="UTF-8" />
     <title>Spiro Location Analysis</title>
+    <!-- ✅ Runtime script to inject ?key=xyz into all asset URLs -->
+    <script>
+      console.log("🔧 Starting runtime asset modification...");
+      (function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const apiKey = urlParams.get("key");
+        console.log("🔑 API Key found:", apiKey);
+
+        if (!apiKey) {
+          console.warn("⚠️ No API key found in URL");
+          return;
+        }
+
+        // ✅ Helper function to check if URL should be patched
+        const shouldPatchUrl = (url) => {
+          return (
+            url &&
+            !url.includes("?key=") &&
+            (url.includes("/user-management/assets/") ||
+              url.includes("/assets/") ||
+              url.includes("/src/")) // For Vite dev mode
+          );
+        };
+
+        // ✅ Patch already existing static <script> and <link>
+        document
+          .querySelectorAll('script[src], link[rel="stylesheet"]')
+          .forEach((el) => {
+            const attr = el.tagName === "SCRIPT" ? "src" : "href";
+            if (shouldPatchUrl(el[attr])) {
+              el[attr] += `?key=${apiKey}`;
+              console.log(`🔁 Patched static ${attr}:`, el[attr]);
+            }
+          });
+
+        // ✅ Patch favicon
+        const favicon = document.querySelector('link[rel="icon"]');
+        if (favicon && favicon.href && !favicon.href.includes("?key=")) {
+          favicon.href += `?key=${apiKey}`;
+          console.log("✅ Favicon modified:", favicon.href);
+        }
+
+        // ✅ Override document.createElement to modify new script/link
+        const originalCreateElement = document.createElement;
+        document.createElement = function (tagName) {
+          const element = originalCreateElement.call(document, tagName);
+
+          if (
+            tagName.toLowerCase() === "link" ||
+            tagName.toLowerCase() === "script"
+          ) {
+            const originalSetAttribute = element.setAttribute;
+            element.setAttribute = function (name, value) {
+              if (
+                (name === "href" || name === "src") &&
+                shouldPatchUrl(value)
+              ) {
+                value += `?key=${apiKey}`;
+                console.log(`✅ Modified ${name}:`, value);
+              }
+              return originalSetAttribute.call(this, name, value);
+            };
+          }
+
+          return element;
+        };
+
+        // ✅ Patch DOM insertions
+        const patchElement = (el) => {
+          if (
+            el.tagName === "LINK" &&
+            el.rel === "stylesheet" &&
+            shouldPatchUrl(el.href)
+          ) {
+            el.href += `?key=${apiKey}`;
+            console.log("✅ Patched stylesheet via append/insert:", el.href);
+          } else if (el.tagName === "SCRIPT" && shouldPatchUrl(el.src)) {
+            el.src += `?key=${apiKey}`;
+            console.log("✅ Patched script via append/insert:", el.src);
+          }
+        };
+
+        const originalAppendChild = document.head.appendChild;
+        document.head.appendChild = function (el) {
+          patchElement(el);
+          return originalAppendChild.call(this, el);
+        };
+
+        const originalInsertBefore = document.head.insertBefore;
+        document.head.insertBefore = function (newEl, refEl) {
+          patchElement(newEl);
+          return originalInsertBefore.call(this, newEl, refEl);
+        };
+
+        // ✅ NEW: MutationObserver to catch dynamically added scripts/links
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              if (node.nodeType === 1) {
+                // Element node
+                if (node.tagName === "SCRIPT" && shouldPatchUrl(node.src)) {
+                  node.src += `?key=${apiKey}`;
+                  console.log("✅ MutationObserver patched script:", node.src);
+                } else if (
+                  node.tagName === "LINK" &&
+                  node.rel === "stylesheet" &&
+                  shouldPatchUrl(node.href)
+                ) {
+                  node.href += `?key=${apiKey}`;
+                  console.log(
+                    "✅ MutationObserver patched stylesheet:",
+                    node.href
+                  );
+                }
+              }
+            });
+          });
+        });
+
+        // Observe both head and body for script/link additions
+        observer.observe(document.head, { childList: true, subtree: true });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // ✅ Optionally reload styles/scripts on DOMContentLoaded
+        window.addEventListener("DOMContentLoaded", function () {
+          const links = document.querySelectorAll('link[rel="stylesheet"]');
+          links.forEach((link) => {
+            if (shouldPatchUrl(link.href)) {
+              const newLink = document.createElement("link");
+              newLink.rel = "stylesheet";
+              newLink.href = link.href + `?key=${apiKey}`;
+              document.head.appendChild(newLink);
+              link.remove();
+              console.log("🔁 Reloaded stylesheet with key:", newLink.href);
+            }
+          });
+        });
+
+        console.log("🚀 Runtime asset modification setup complete!");
+      })();
+    </script>
+    
     <link rel="icon" type="image" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href='https://unpkg.com/maplibre-gl@5.2.0/dist/maplibre-gl.css' rel='stylesheet' />

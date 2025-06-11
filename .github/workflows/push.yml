@@ -1,0 +1,37 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-push-image:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: ${{ github.ref_name }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Log in to GitHub Packages
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+      - name: Build Docker image
+        env:
+          VITE_PUBLIC_BACKEND_API_URL: ${{ secrets.VITE_PUBLIC_BACKEND_API_URL }}
+          VITE_SPIRO_MAPS_LIGHT_STYLE_API_URL: ${{ secrets.VITE_SPIRO_MAPS_LIGHT_STYLE_API_URL }}
+          VITE_SPIRO_MAPS_DARK_STYLE_API_URL: ${{ secrets.VITE_SPIRO_MAPS_DARK_STYLE_API_URL }}
+          VITE_SPIRO_MAPS_STYLE_API_KEY: ${{ secrets.VITE_SPIRO_MAPS_STYLE_API_KEY }}
+          VITE_SPIRO_MAPS_DIRECTIONS_API_URL: ${{ secrets.VITE_SPIRO_MAPS_DIRECTIONS_API_URL }}
+          VITE_SPIRO_MAPS_DIRECTIONS_API_KEY: ${{ secrets.VITE_SPIRO_MAPS_DIRECTIONS_API_KEY }}
+        run: docker build --secret id=VITE_PUBLIC_BACKEND_API_URL --secret id=VITE_SPIRO_MAPS_LIGHT_STYLE_API_URL --secret id=VITE_SPIRO_MAPS_DARK_STYLE_API_URL --secret id=VITE_SPIRO_MAPS_STYLE_API_KEY --secret id=VITE_SPIRO_MAPS_DIRECTIONS_API_URL --secret id=VITE_SPIRO_MAPS_DIRECTIONS_API_KEY -t ghcr.io/spiromaps/retail-pro-max-ui:latest .
+
+      - name: Push Docker image to GitHub Packages
+        run: docker push ghcr.io/spiromaps/retail-pro-max-ui:latest

@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useRef, useCallback } from "react"
 import {
   Map,
@@ -19,6 +17,7 @@ import type { RootState, AppDispatch } from "../../store"
 import { setSelectedFeature, clearFitToLayer } from "../../store/map/layerSlice"
 import { DistanceMeasureControl } from "./distance/distance"
 import { FeaturePopup } from "./popup/feature-popup"
+import type {MapRef} from 'react-map-gl/maplibre';
 
 export default function MapComponent() {
   const dispatch = useDispatch<AppDispatch>()
@@ -32,7 +31,8 @@ export default function MapComponent() {
     zoom: 4,
   })
 
-  const mapRef = useRef<maplibregl.Map | null>(null)
+  // const mapRef = useRef<maplibregl.Map | null>(null)
+  const mapRef = useRef<MapRef | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false)
 
   // Handle fitToLayer requests
@@ -137,14 +137,42 @@ export default function MapComponent() {
   )
 
   const renderLayers = useCallback(() => {
-    return layerGroups
-      .flatMap((group) =>
-        group.visible
-          ? group.layers.map((layer) => {
+  return layerGroups
+    .flatMap((group) =>
+      group.visible
+        ? group.layers.map((layer) => {
             if (!layer.visible) return null
 
             // Handle MBTiles layers
             if (layer.mbtilesUrl) {
+              // Type-specific paint properties for MBTiles layers
+              const getPaintProps = () => {
+                switch (layer.mapLayerType) {
+                  case "circle":
+                    return {
+                      "circle-radius": layer.style.size,
+                      "circle-color": layer.style.color,
+                      "circle-opacity": layer.style.opacity,
+                      "circle-stroke-color": layer.style.stroke,
+                      "circle-stroke-width": layer.style.strokeWidth,
+                    }
+                  case "line":
+                    return {
+                      "line-color": layer.style.color,
+                      "line-width": layer.style.strokeWidth,
+                      "line-opacity": layer.style.opacity,
+                    }
+                  case "fill":
+                    return {
+                      "fill-color": layer.style.color,
+                      "fill-opacity": layer.style.opacity,
+                      "fill-outline-color": layer.style.stroke,
+                    }
+                  default:
+                    return {}
+                }
+              }
+
               return (
                 <Source
                   key={layer.id}
@@ -157,27 +185,8 @@ export default function MapComponent() {
                   <Layer
                     id={layer.id}
                     source-layer="default" // This might need to be adjusted based on your MBTiles structure
-                    type={layer.mapLayerType}
-                    paint={{
-                      // Apply appropriate paint properties based on layer type
-                      ...(layer.mapLayerType === "circle" && {
-                        "circle-radius": layer.style.size,
-                        "circle-color": layer.style.color,
-                        "circle-opacity": layer.style.opacity,
-                        "circle-stroke-color": layer.style.stroke,
-                        "circle-stroke-width": layer.style.strokeWidth,
-                      }),
-                      ...(layer.mapLayerType === "line" && {
-                        "line-color": layer.style.color,
-                        "line-width": layer.style.strokeWidth,
-                        "line-opacity": layer.style.opacity,
-                      }),
-                      ...(layer.mapLayerType === "fill" && {
-                        "fill-color": layer.style.color,
-                        "fill-opacity": layer.style.opacity,
-                        "fill-outline-color": layer.style.stroke,
-                      }),
-                    }}
+                    type={layer.mapLayerType as "circle" | "line" | "fill"} // Explicit type assertion
+                    paint={getPaintProps()}
                   />
                 </Source>
               )
@@ -185,50 +194,54 @@ export default function MapComponent() {
 
             // Handle GeoJSON layers
             if (layer.data) {
-              const layerStyle = {
-                // Circle (Point) style
-                "circle-radius": layer.mapLayerType === "circle" ? layer.style.size : undefined,
-                "circle-color": layer.mapLayerType === "circle" ? layer.style.color : undefined,
-                "circle-opacity": layer.mapLayerType === "circle" ? layer.style.opacity : undefined,
-                "circle-stroke-color": layer.mapLayerType === "circle" ? layer.style.stroke : undefined,
-                "circle-stroke-width": layer.mapLayerType === "circle" ? layer.style.strokeWidth : undefined,
-
-                // Line style
-                "line-color": layer.mapLayerType === "line" ? layer.style.color : undefined,
-                "line-width": layer.mapLayerType === "line" ? layer.style.strokeWidth : undefined,
-                "line-opacity": layer.mapLayerType === "line" ? layer.style.opacity : undefined,
-
-                // Fill (Polygon) style
-                "fill-color": layer.mapLayerType === "fill" ? layer.style.color : undefined,
-                "fill-opacity": layer.mapLayerType === "fill" ? layer.style.opacity : undefined,
-                "fill-outline-color": layer.mapLayerType === "fill" ? layer.style.stroke : undefined,
+              // Type-specific paint properties for GeoJSON layers
+              const getPaintProps = () => {
+                switch (layer.mapLayerType) {
+                  case "circle":
+                    return {
+                      "circle-radius": layer.style.size,
+                      "circle-color": layer.style.color,
+                      "circle-opacity": layer.style.opacity,
+                      "circle-stroke-color": layer.style.stroke,
+                      "circle-stroke-width": layer.style.strokeWidth,
+                    }
+                  case "line":
+                    return {
+                      "line-color": layer.style.color,
+                      "line-width": layer.style.strokeWidth,
+                      "line-opacity": layer.style.opacity,
+                    }
+                  case "fill":
+                    return {
+                      "fill-color": layer.style.color,
+                      "fill-opacity": layer.style.opacity,
+                      "fill-outline-color": layer.style.stroke,
+                    }
+                  default:
+                    return {}
+                }
               }
-
-              // Remove undefined properties
-              Object.keys(layerStyle).forEach((key) => layerStyle[key] === undefined && delete layerStyle[key])
-              // Object.keys(layerStyle).forEach((key) => {
-              //   const k = key as keyof typeof layerStyle;
-              //   if (layerStyle[k] === undefined) {
-              //     delete layerStyle[k];
-              //   }
-              // });
 
               // Use filtered data if available, otherwise use original data
               const sourceData = layer.style.filteredData || layer.data
 
               return (
                 <Source key={layer.id} type="geojson" data={sourceData}>
-                  <Layer id={layer.id} type={layer.mapLayerType} paint={layerStyle} />
+                  <Layer 
+                    id={layer.id} 
+                    type={layer.mapLayerType as "circle" | "line" | "fill"} // Explicit type assertion
+                    paint={getPaintProps()} 
+                  />
                 </Source>
               )
             }
 
             return null
           })
-          : [],
-      )
-      .filter(Boolean)
-  }, [layerGroups])
+        : [],
+    )
+    .filter(Boolean)
+}, [layerGroups])
 
   const getMapStyleUrl = () => {
     if (mapStyle === "dark") {

@@ -1,9 +1,8 @@
 import type React from "react"
 import { useEffect, useState, useRef } from "react"
 import { type MapRef, Marker } from "react-map-gl/maplibre"
-import { useDispatch, useSelector} from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { v4 as uuidv4 } from "uuid"
-import { Feature, LineString } from 'geojson';
 // import { X } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import RouteInfoPanel from "./route-info-panel"
@@ -11,7 +10,7 @@ import { cancelMeasuring } from "../../../store/map/measurementSlice"
 import type { RootState } from "../../../store" // Adjust the import path as needed
 
 interface DistanceMeasureControlProps {
-  mapRef: React.RefObject<MapRef>
+  mapRef: React.RefObject<MapRef | null>
   apiUrl: string
   apiKey?: string
 }
@@ -34,10 +33,10 @@ interface RouteSegment {
   }
 }
 
-export function DistanceMeasureControl({mapRef, apiUrl, apiKey }: DistanceMeasureControlProps) {
-  const dispatch= useDispatch();
-   // Get isMeasuring from Redux store
-   const isMeasuring = useSelector((state: RootState) => state.measurement.isMeasuring)
+export function DistanceMeasureControl({ mapRef, apiUrl, apiKey }: DistanceMeasureControlProps) {
+  const dispatch = useDispatch();
+  // Get isMeasuring from Redux store
+  const isMeasuring = useSelector((state: RootState) => state.measurement.isMeasuring)
   const [points, setPoints] = useState<RoutePoint[]>([])
   const [segments, setSegments] = useState<RouteSegment[]>([])
   const [totalDistance, setTotalDistance] = useState<number>(0)
@@ -108,111 +107,257 @@ export function DistanceMeasureControl({mapRef, apiUrl, apiKey }: DistanceMeasur
     }
   }, [isMeasuring, points, mapRef])
 
-  // Add a new route segment between two points
-  const addRouteSegment = async (startPoint: RoutePoint, endPoint: RoutePoint) => {
-    const map = mapRef.current
-    if (!map) return
+  //   // Add a new route segment between two points
+  //   const addRouteSegment = async (startPoint: RoutePoint, endPoint: RoutePoint) => {
+  //     const map = mapRef.current
+  //     if (!map) return
 
-    const feature = await fetchRoute(startPoint.coordinates, endPoint.coordinates) as Feature<LineString>;
-    const segmentId = uuidv4()
+  //     const feature = await fetchRoute(startPoint.coordinates, endPoint.coordinates)
+  //     const segmentId = uuidv4()
 
-    console.log("Feature to add on map:",feature)
+  //     console.log("Feature to add on map:",feature)
 
-    // Add the line to the map
-    map.getMap().addSource(`line-${segmentId}`, {
-      type: "geojson",
-      data: feature,
-    })
+  //     // Add the line to the map
+  //     map.addSource(`line-${segmentId}`, {
+  //       type: "geojson",
+  //       data: feature,
+  //     })
 
-    map.getMap().addLayer({
-      id: `line-${segmentId}`,
-      type: "line",
-      source: `line-${segmentId}`,
-      paint: {
-        "line-color": "#3b82f6", // Blue color
-        "line-width": 4,
-        "line-opacity": 0.8,
-      },
-    })
+  //     map.addLayer({
+  //       id: `line-${segmentId}`,
+  //       type: "line",
+  //       source: `line-${segmentId}`,
+  //       paint: {
+  //         "line-color": "#3b82f6", // Blue color
+  //         "line-width": 4,
+  //         "line-opacity": 0.8,
+  //       },
+  //     })
 
-    // Store the segment data
-    setSegments((prev) => [
-      ...prev,
-      {
-        id: segmentId,
-        startPointId: startPoint.id,
-        endPointId: endPoint.id,
-        distance: feature.properties?.distance??"unknown",
-        duration: feature.properties?.duration?? "unknown",
-        // geometry: feature.geometry,
-        geometry:{
-          type:"LineString",
-          coordinates: feature.geometry.coordinates.map(
-            (coord):[number,number]=>[coord[0],coord[1]]
-          ),
-        }
-      },
-    ])
-  }
+  //     // Store the segment data
+  //     setSegments((prev) => [
+  //       ...prev,
+  //       {
+  //         id: segmentId,
+  //         startPointId: startPoint.id,
+  //         endPointId: endPoint.id,
+  //         distance: feature.properties.distance,
+  //         duration: feature.properties.duration,
+  //         geometry: feature.geometry,
+  //       },
+  //     ])
+  //   }
 
-  // Clean up map layers and sources
-  const cleanupMap = () => {
-    const map = mapRef.current
-    if (!map) return
+  //   // Clean up map layers and sources
+  //   const cleanupMap = () => {
+  //     const map = mapRef.current
+  //     if (!map) return
 
-    segments.forEach((segment) => {
-      try {
-        map.getMap().removeLayer(`line-${segment.id}`)
-        map.getMap().removeSource(`line-${segment.id}`)
-      } catch (err) {
-        console.warn("Error cleaning layers:", err)
-      }
-    })
-  }
+  //     segments.forEach((segment) => {
+  //       try {
+  //         map.removeLayer(`line-${segment.id}`)
+  //         map.removeSource(`line-${segment.id}`)
+  //       } catch (err) {
+  //         console.warn("Error cleaning layers:", err)
+  //       }
+  //     })
+  //   }
 
-  // Remove a specific point and connected segments
-  const removePoint = (pointId: string) => {
-    const map = mapRef.current
-    if (!map) return
+  //   // Remove a specific point and connected segments
+  //   const removePoint = (pointId: string) => {
+  //     const map = mapRef.current
+  //     if (!map) return
 
-    // Remove connected segments
-    const connectedSegments = segments.filter((s) => s.startPointId === pointId || s.endPointId === pointId)
+  //     // Remove connected segments
+  //     const connectedSegments = segments.filter((s) => s.startPointId === pointId || s.endPointId === pointId)
 
-    connectedSegments.forEach((segment) => {
-      try {
-        map.getMap().removeLayer(`line-${segment.id}`)
-        map.getMap().removeSource(`line-${segment.id}`)
-      } catch (err) {
-        console.warn("Error removing segment:", err)
-      }
-    })
+  //     connectedSegments.forEach((segment) => {
+  //       try {
+  //         map.removeLayer(`line-${segment.id}`)
+  //         map.removeSource(`line-${segment.id}`)
+  //       } catch (err) {
+  //         console.warn("Error removing segment:", err)
+  //       }
+  //     })
 
-    // Update segments state
-    setSegments((prev) => prev.filter((s) => s.startPointId !== pointId && s.endPointId !== pointId))
+  //     // Update segments state
+  //     setSegments((prev) => prev.filter((s) => s.startPointId !== pointId && s.endPointId !== pointId))
 
-    // Update points state
-    setPoints((prev) => prev.filter((p) => p.id !== pointId))
-  }
+  //     // Update points state
+  //     setPoints((prev) => prev.filter((p) => p.id !== pointId))
+  //   }
 
-  
-  // Remove a specific segment and connected points/segments
+
+  //   // Remove a specific segment and connected points/segments
+  // const removeSegment = (segmentId: string) => {
+  //   const map = mapRef.current;
+  //   if (!map) return;
+
+  //   // Find the segment to remove
+  //   const segmentToRemove = segments.find((s) => s.id === segmentId);
+  //   if (!segmentToRemove) {
+  //     console.warn("Segment not found:", segmentId);
+  //     return;
+  //   }
+
+  //   // Remove the segment layer and source from the map
+  //   try {
+  //     map.removeLayer(`line-${segmentId}`);
+  //     map.removeSource(`line-${segmentId}`);
+  //   } catch (err) {
+  //     console.warn("Error removing segment from map:", err);
+  //   }
+
+  //   // Check if it's a middle segment
+  //   const isMiddleSegment = segments.some(
+  //     (s) =>
+  //       (s.startPointId === segmentToRemove.startPointId && s.id !== segmentId) ||
+  //       (s.endPointId === segmentToRemove.endPointId && s.id !== segmentId)
+  //   );
+
+  //   if (isMiddleSegment) {
+  //     // If it's a middle segment, remove all points and segments aligned with it
+  //     const pointsToRemove = new Set<string>();
+  //     const segmentsToRemove = new Set<string>();
+
+  //     const traverseAndCollect = (startPointId: string) => {
+  //       segments.forEach((s) => {
+  //         if (s.startPointId === startPointId || s.endPointId === startPointId) {
+  //           segmentsToRemove.add(s.id);
+  //           pointsToRemove.add(s.startPointId);
+  //           pointsToRemove.add(s.endPointId);
+  //           traverseAndCollect(s.startPointId);
+  //           traverseAndCollect(s.endPointId);
+  //         }
+  //       });
+  //     };
+
+  //     traverseAndCollect(segmentToRemove.startPointId);
+
+  //     // Remove collected segments
+  //     Array.from(segmentsToRemove).forEach((id) => {
+  //       try {
+  //         map.removeLayer(`line-${id}`);
+  //         map.removeSource(`line-${id}`);
+  //       } catch (err) {
+  //         console.warn("Error removing segment:", err);
+  //       }
+  //     });
+
+  //     // Update state
+  //     setSegments((prev) => prev.filter((s) => !segmentsToRemove.has(s.id)));
+  //     setPoints((prev) => prev.filter((p) => !pointsToRemove.has(p.id)));
+  //   } else {
+  //     // If it's not a middle segment, just remove the segment and the last point
+  //     const pointToRemove =
+  //       segmentToRemove.endPointId !== segmentToRemove.startPointId
+  //         ? segmentToRemove.endPointId
+  //         : segmentToRemove.startPointId;
+
+  //     // Remove point from the map
+  //     setPoints((prev) => prev.filter((p) => p.id !== pointToRemove));
+  //     setSegments((prev) => prev.filter((s) => s.id !== segmentId));
+  //   }
+  // };
+
+// Add a new route segment between two points
+const addRouteSegment = async (startPoint: RoutePoint, endPoint: RoutePoint) => {
+  const mapInstance = mapRef.current as any
+  if (!mapInstance) return
+
+  const feature = await fetchRoute(startPoint.coordinates, endPoint.coordinates)
+  const segmentId = uuidv4()
+
+  console.log("Feature to add on map:", feature)
+
+  // Add the line to the map
+  mapInstance.addSource(`line-${segmentId}`, {
+    type: "geojson",
+    data: feature,
+  })
+
+  mapInstance.addLayer({
+    id: `line-${segmentId}`,
+    type: "line",
+    source: `line-${segmentId}`,
+    paint: {
+      "line-color": "#3b82f6", // Blue color
+      "line-width": 4,
+      "line-opacity": 0.8,
+    },
+  })
+
+  // Store the segment data
+  setSegments((prev) => [
+    ...prev,
+    {
+      id: segmentId,
+      startPointId: startPoint.id,
+      endPointId: endPoint.id,
+      distance: feature.properties.distance,
+      duration: feature.properties.duration,
+      geometry: feature.geometry,
+    },
+  ])
+}
+
+// Clean up map layers and sources
+const cleanupMap = () => {
+  const mapInstance = mapRef.current as any
+  if (!mapInstance) return
+
+  segments.forEach((segment) => {
+    try {
+      mapInstance.removeLayer(`line-${segment.id}`)
+      mapInstance.removeSource(`line-${segment.id}`)
+    } catch (err) {
+      console.warn("Error cleaning layers:", err)
+    }
+  })
+}
+
+// Remove a specific point and connected segments
+const removePoint = (pointId: string) => {
+  const mapInstance = mapRef.current as any
+  if (!mapInstance) return
+
+  // Remove connected segments
+  const connectedSegments = segments.filter((s) => s.startPointId === pointId || s.endPointId === pointId)
+
+  connectedSegments.forEach((segment) => {
+    try {
+      mapInstance.removeLayer(`line-${segment.id}`)
+      mapInstance.removeSource(`line-${segment.id}`)
+    } catch (err) {
+      console.warn("Error removing segment:", err)
+    }
+  })
+
+  // Update segments state
+  setSegments((prev) => prev.filter((s) => s.startPointId !== pointId && s.endPointId !== pointId))
+
+  // Update points state
+  setPoints((prev) => prev.filter((p) => p.id !== pointId))
+}
+
+// Remove a specific segment and connected points/segments
 const removeSegment = (segmentId: string) => {
-  const map = mapRef.current;
-  if (!map) return;
+  const mapInstance = mapRef.current as any
+  if (!mapInstance) return
 
   // Find the segment to remove
-  const segmentToRemove = segments.find((s) => s.id === segmentId);
+  const segmentToRemove = segments.find((s) => s.id === segmentId)
   if (!segmentToRemove) {
-    console.warn("Segment not found:", segmentId);
-    return;
+    console.warn("Segment not found:", segmentId)
+    return
   }
 
   // Remove the segment layer and source from the map
   try {
-    map.getMap().removeLayer(`line-${segmentId}`);
-    map.getMap().removeSource(`line-${segmentId}`);
+    mapInstance.removeLayer(`line-${segmentId}`)
+    mapInstance.removeSource(`line-${segmentId}`)
   } catch (err) {
-    console.warn("Error removing segment from map:", err);
+    console.warn("Error removing segment from map:", err)
   }
 
   // Check if it's a middle segment
@@ -220,52 +365,52 @@ const removeSegment = (segmentId: string) => {
     (s) =>
       (s.startPointId === segmentToRemove.startPointId && s.id !== segmentId) ||
       (s.endPointId === segmentToRemove.endPointId && s.id !== segmentId)
-  );
+  )
 
   if (isMiddleSegment) {
     // If it's a middle segment, remove all points and segments aligned with it
-    const pointsToRemove = new Set<string>();
-    const segmentsToRemove = new Set<string>();
+    const pointsToRemove = new Set<string>()
+    const segmentsToRemove = new Set<string>()
 
     const traverseAndCollect = (startPointId: string) => {
       segments.forEach((s) => {
         if (s.startPointId === startPointId || s.endPointId === startPointId) {
-          segmentsToRemove.add(s.id);
-          pointsToRemove.add(s.startPointId);
-          pointsToRemove.add(s.endPointId);
-          traverseAndCollect(s.startPointId);
-          traverseAndCollect(s.endPointId);
+          segmentsToRemove.add(s.id)
+          pointsToRemove.add(s.startPointId)
+          pointsToRemove.add(s.endPointId)
+          traverseAndCollect(s.startPointId)
+          traverseAndCollect(s.endPointId)
         }
-      });
-    };
+      })
+    }
 
-    traverseAndCollect(segmentToRemove.startPointId);
+    traverseAndCollect(segmentToRemove.startPointId)
 
     // Remove collected segments
     Array.from(segmentsToRemove).forEach((id) => {
       try {
-        map.getMap().removeLayer(`line-${id}`);
-        map.getMap().removeSource(`line-${id}`);
+        mapInstance.removeLayer(`line-${id}`)
+        mapInstance.removeSource(`line-${id}`)
       } catch (err) {
-        console.warn("Error removing segment:", err);
+        console.warn("Error removing segment:", err)
       }
-    });
+    })
 
     // Update state
-    setSegments((prev) => prev.filter((s) => !segmentsToRemove.has(s.id)));
-    setPoints((prev) => prev.filter((p) => !pointsToRemove.has(p.id)));
+    setSegments((prev) => prev.filter((s) => !segmentsToRemove.has(s.id)))
+    setPoints((prev) => prev.filter((p) => !pointsToRemove.has(p.id)))
   } else {
     // If it's not a middle segment, just remove the segment and the last point
     const pointToRemove =
       segmentToRemove.endPointId !== segmentToRemove.startPointId
         ? segmentToRemove.endPointId
-        : segmentToRemove.startPointId;
+        : segmentToRemove.startPointId
 
     // Remove point from the map
-    setPoints((prev) => prev.filter((p) => p.id !== pointToRemove));
-    setSegments((prev) => prev.filter((s) => s.id !== segmentId));
+    setPoints((prev) => prev.filter((p) => p.id !== pointToRemove))
+    setSegments((prev) => prev.filter((s) => s.id !== segmentId))
   }
-};
+}
 
   // Fetch route between two points
   async function fetchRoute(coord1: [number, number], coord2: [number, number]) {
@@ -285,7 +430,7 @@ const removeSegment = (segmentId: string) => {
       if (!response.ok) throw new Error("Routing API error")
 
       const data = await response.json()
-      console.log("Response Data:",data)
+      console.log("Response Data:", data)
       if (!data?.trip?.legs?.length) throw new Error("No route found")
 
       const decoded = decodePolyline(data.trip.legs[0].shape)
@@ -339,7 +484,7 @@ const removeSegment = (segmentId: string) => {
       lat = 0,
       lng = 0,
       coordinates: [number, number][] = [];
-  
+
     while (index < encoded.length) {
       let b,
         shift = 0,
@@ -351,7 +496,7 @@ const removeSegment = (segmentId: string) => {
       } while (b >= 0x20);
       const dlat = result & 1 ? ~(result >> 1) : result >> 1;
       lat += dlat;
-  
+
       shift = 0;
       result = 0;
       do {
@@ -361,11 +506,11 @@ const removeSegment = (segmentId: string) => {
       } while (b >= 0x20);
       const dlng = result & 1 ? ~(result >> 1) : result >> 1;
       lng += dlng;
-  
+
       // Adjust scaling factor if necessary
       const longitude = lng / 1e6;
       const latitude = lat / 1e6;
-  
+
       // Validate decoded coordinates
       if (longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90) {
         console.warn("Invalid decoded coordinate:", { longitude, latitude });
@@ -373,10 +518,10 @@ const removeSegment = (segmentId: string) => {
         coordinates.push([longitude, latitude]);
       }
     }
-  
+
     return coordinates;
   }
- 
+
 
   // Render markers for each point
   const renderMarkers = () => {
@@ -402,8 +547,8 @@ const removeSegment = (segmentId: string) => {
     ))
   }
 
-   // Handle closing the measurement mode
-   const handleClose = () => {
+  // Handle closing the measurement mode
+  const handleClose = () => {
     dispatch(cancelMeasuring())
   }
 

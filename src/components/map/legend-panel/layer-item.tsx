@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Circle, Minus, Square, Eye, EyeOff, GripVertical, Pencil, X, MapPin,Ellipsis } from "lucide-react"
+import { Eye, EyeOff, GripVertical, Pencil, X, MapPin,Ellipsis } from "lucide-react"
 import { Checkbox } from "../../ui/checkbox"
 import { Button } from "../../ui/button"
 import {useDispatch} from 'react-redux'
@@ -23,20 +23,21 @@ interface LayerItemProps {
   onSelect: (layerId: string, selected: boolean) => void
   dragHandleProps: any
   selectedLayerId: string | null
+  onFitToLayer: (layerId: string) => void;
 }
 
-const GeometryIcon = React.memo(({ type }: { type: GeometryType }) => {
-  switch (type) {
-    case "Point":
-      return <Circle className="h-3 w-3 text-blue-400" />
-    case "Line":
-      return <Minus className="h-4 w-4 text-purple-800" />
-    case "Polygon":
-      return <Square className="h-3 w-3 text-orange-500" />
-    default:
-      return null
-  }
-})
+// const GeometryIcon = React.memo(({ type }: { type: GeometryType }) => {
+//   switch (type) {
+//     case "Point":
+//       return <Circle className="h-3 w-3 text-blue-400" />
+//     case "Line":
+//       return <Minus className="h-4 w-4 text-purple-800" />
+//     case "Polygon":
+//       return <Square className="h-3 w-3 text-orange-500" />
+//     default:
+//       return null
+//   }
+// })
 
 export const LayerItem = React.memo(function LayerItem({
   layer,

@@ -53,7 +53,7 @@ export function AttributeTable({ layer }: AttributeTableProps) {
       result = result.filter((feature) => {
         if (!feature.properties) return false
 
-        return Object.entries(feature.properties).some(([key, value]) => {
+        return Object.entries(feature.properties).some(([_key, value]) => {
           if (value === null || value === undefined) return false
           return String(value).toLowerCase().includes(query)
         })

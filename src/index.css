@@ -10,6 +10,22 @@
 
 /* @custom-variant dark (&:is(.dark *)); */
 
+/* body {
+  color: rgb(var(--foreground-rgb));
+  font-family:'Poppins' !important;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(var(--background-end-rgb))
+  )
+    rgb(var(--background-start-rgb));
+
+}
+
+* {
+  font-family: 'Poppins' !important;
+} */
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);

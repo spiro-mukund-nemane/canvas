@@ -6,6 +6,7 @@ import {TanStackRouterVite} from '@tanstack/router-vite-plugin'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // base:'/retail-pro-max/',
   plugins: [react(), tailwindcss(), TanStackRouterVite()],
   resolve:{
     alias:{

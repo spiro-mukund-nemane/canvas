@@ -1,7 +1,5 @@
-
-
 import { CalendarIcon, ClockIcon, Trash2 } from "lucide-react"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,12 +10,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
+} from "../../components/ui/alert-dialog"
+import { Button } from "../../components/ui/button"
 import { useNavigate } from "@tanstack/react-router"
 import { useDispatch } from "react-redux"
 import type { Project } from "../../store/project/projectSlice"
 import { deleteProject, setCurrentProject } from "../../store/project/projectSlice"
+import { AppDispatch } from "../../store"
 
 interface ProjectCardProps {
   project: Project & {
@@ -65,7 +64,7 @@ const formatDate = (dateString?: string) => {
 export function ProjectCard({ project }: ProjectCardProps) {
   const navigate = useNavigate()
   const projectColor = getProjectColor(project.name)
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
 
   const handleOpenProject = () => {
     // Set the current project before navigating
@@ -77,11 +76,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
     dispatch(deleteProject(project.id))
   }
 
-  const handleOpenFiles = () => {
-    // Set the current project before navigating to files
-    dispatch(setCurrentProject(project.id))
-    navigate({ to: `/project/${project.id}/files` })
-  }
+  // const handleOpenFiles = () => {
+  //   // Set the current project before navigating to files
+  //   dispatch(setCurrentProject(project.id))
+  //   navigate({ to: `/project/${project.id}/files` })
+  // }
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">

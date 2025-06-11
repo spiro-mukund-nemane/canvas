@@ -15,7 +15,7 @@ import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
 import { Label } from "../../ui/label"
 import { Alert, AlertDescription } from "../../ui/alert"
-import type { RootState } from "../../../store"
+import { AppDispatch, type RootState } from "../../../store"
 
 interface AddNewLayerDialogProps {
   open: boolean
@@ -23,7 +23,7 @@ interface AddNewLayerDialogProps {
 }
 
 export function AddNewLayerDialog({ open, setOpen }: AddNewLayerDialogProps) {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   const { currentProject } = useSelector((state: RootState) => state.project)
 
   // Replace the file state with files array

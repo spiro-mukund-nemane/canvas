@@ -1,28 +1,17 @@
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState} from "react"
 import {
   ChevronDown,
-  MessageCircle,
-  Pencil,
-  Scissors,
-  Search,
   Share2,
-  Layers,
-  MapPin,
-  MapIcon,
-  Circle,
-  Square,
-  MousePointer,
-  LineChartIcon as LineIcon,
-  Upload, ChevronRight, Route, Delete, Ruler, X,
+ Route,X,
 } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "../../components/ui/tooltip"
 import { Avatar, AvatarFallback } from "../ui/avatar"
 import { Button } from "../ui/button"
 import {
@@ -42,11 +31,9 @@ import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../store"
 import { addUploadedLayer } from "../../store/map/layerSlice"
 import { useNavigate } from "@tanstack/react-router"
-import { fetchFiles, updateFile } from "../../store/file/fileSlice"
-// import { loadSelectedFilesAsLayers } from "../../store/map/layerSlice"
-import { Checkbox } from "../ui/checkbox"
-import { ScrollArea } from "../ui/scroll-area"
-import { toggleMeasuring, cancelMeasuring } from '../../store/map/measurementSlice'
+// import {updateFile } from "../../store/file/fileSlice"
+// import { toggleMeasuring, cancelMeasuring } from '../../store/map/measurementSlice'
+import { toggleMeasuring} from '../../store/map/measurementSlice'
 
 
 
@@ -54,14 +41,14 @@ import { toggleMeasuring, cancelMeasuring } from '../../store/map/measurementSli
 export default function Header() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const { currentProject } = useSelector((state: RootState) => state.project)
-  const { files, loading } = useSelector((state: RootState) => state.file)
+  // const { currentProject } = useSelector((state: RootState) => state.project)
+  // const { files, loading } = useSelector((state: RootState) => state.file)
   const isMeasuring = useSelector((state: RootState) => state.measurement.isMeasuring);
-  const [selectFilesDialogOpen, setSelectFilesDialogOpen] = useState(false)
+  const [_selectFilesDialogOpen, setSelectFilesDialogOpen] = useState(false)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
+  // const [searchTerm, setSearchTerm] = useState("")
   // const [isMeasuring, setIsMeasuring] = useState(false);
 
   // // Fetch files when component mounts or project changes
@@ -125,9 +112,9 @@ export default function Header() {
     navigate({ to: `/` })
   }
 
-  const handleToggleSelect = (id: number, selected: boolean) => {
-    dispatch(updateFile({ id, changes: { selected } }))
-  }
+  // const handleToggleSelect = (id: number, selected: boolean) => {
+  //   dispatch(updateFile({ id, changes: { selected } }))
+  // }
 
   // const handleApplySelection = () => {
   //   const selectedFiles = files.filter((file) => file.selected)
@@ -138,14 +125,14 @@ export default function Header() {
   // }
 
   // Filter files based on search
-  const filteredFiles = files.filter((file) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      (file.name && file.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (file.file_layer_type && file.file_layer_type.toLowerCase().includes(searchTerm.toLowerCase()))
+  // const filteredFiles = files.filter((file) => {
+  //   const matchesSearch =
+  //     searchTerm === "" ||
+  //     (file.name && file.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+  //     (file.file_layer_type && file.file_layer_type.toLowerCase().includes(searchTerm.toLowerCase()))
 
-    return matchesSearch
-  })
+  //   return matchesSearch
+  // })
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-[64px] flex items-center justify-between gap-4 border-b bg-background px-4 py-2">
@@ -441,23 +428,23 @@ export default function Header() {
 }
 
 // FileIcon component for the empty state
-function FileIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-    </svg>
-  )
-}
+// function FileIcon(props: React.SVGProps<SVGSVGElement>) {
+//   return (
+//     <svg
+//       {...props}
+//       xmlns="http://www.w3.org/2000/svg"
+//       width="24"
+//       height="24"
+//       viewBox="0 0 24 24"
+//       fill="none"
+//       stroke="currentColor"
+//       strokeWidth="2"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
+//     >
+//       <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+//       <polyline points="14 2 14 8 20 8" />
+//     </svg>
+//   )
+// }
 

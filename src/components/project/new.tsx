@@ -3,16 +3,12 @@ import { Button } from "../../components/ui/button"
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+} from "../../components/ui/card"
 import { Input } from "../../components/ui/input"
 import { ImageIcon } from "lucide-react"
 import { useDispatch } from "react-redux"
 import { useNavigate } from "@tanstack/react-router"
-import { createProject, setCurrentProject } from "../../store/project/projectSlice"
+import { createProject } from "../../store/project/projectSlice"
 import type { AppDispatch } from "../../store"
 import { toast } from "sonner"
 
@@ -32,7 +28,7 @@ export default function CreateProject() {
 
       if (resultAction.meta.requestStatus === "fulfilled") {
         // Get the newly created project ID from the response
-        const newProjectId = resultAction.payload.id
+        // const newProjectId = resultAction.payload.id
         toast.success("Project created",{description: `Project "${projectName}" has been created successfully.`})
 
         // Navigate to the newly created project's files page

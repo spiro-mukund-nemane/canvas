@@ -4,7 +4,7 @@ import { useState } from "react"
 import { X, Palette, Filter, ChevronRight, Sheet } from "lucide-react"
 import { Button } from "../../ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
-import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "../../ui/card"
+import { CardContent} from "../../ui/card"
 import { Slider } from "../../ui/slider"
 import { Label } from "../../ui/label"
 import { Input } from "../../ui/input"
@@ -13,7 +13,7 @@ import { AttributeTable } from "./attribute-table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../ui/dialog"
 import { ScrollArea,ScrollBar } from "../../ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "../../../components/ui/separator"
 
 
 interface StylePanelProps {
@@ -24,21 +24,21 @@ interface StylePanelProps {
 
 export function StylePanel({ layer, onClose, onStyleChange }: StylePanelProps) {
   const [activeTab, setActiveTab] = useState("style")
-  const [style, setStyle] = useState(layer.style)
+  const [style, _setStyle] = useState(layer.style)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [showAttributeTable, setShowAttributeTable] = useState(false)
-  const [size, setSize] = useState(layer?.style.size || 4)
-  const [color, setColor] = useState(layer?.style.color || `#${Math.floor(Math.random() * 16777215).toString(16)}`)
-  const [opacity, setOpacity] = useState(layer?.style.opacity || 0.9)
-  const [stroke, setStroke] = useState(layer?.style.stroke || `#${Math.floor(Math.random() * 16777215).toString(16)}`)
+  const [_size, setSize] = useState(layer?.style.size || 4)
+  const [_color, setColor] = useState(layer?.style.color || `#${Math.floor(Math.random() * 16777215).toString(16)}`)
+  const [_opacity, setOpacity] = useState(layer?.style.opacity || 0.9)
+  const [_stroke, setStroke] = useState(layer?.style.stroke || `#${Math.floor(Math.random() * 16777215).toString(16)}`)
   const [strokeWidth, setStrokeWidth] = useState(layer?.style.strokeWidth || 1)
 
 
-  const handleStyleChange = (property: string, value: any) => {
-    const updatedStyle = { ...style, [property]: value }
-    setStyle(updatedStyle)
-    onStyleChange(updatedStyle)
-  }
+  // const handleStyleChange = (property: string, value: any) => {
+  //   const updatedStyle = { ...style, [property]: value }
+  //   setStyle(updatedStyle)
+  //   onStyleChange(updatedStyle)
+  // }
 
   const handleSizeChange = (value: number[]) => {
     const newSize = value[0]

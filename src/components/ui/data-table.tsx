@@ -2,17 +2,25 @@
 import { useState } from "react"
 import {
   type ColumnDef,
-  type ColumnFiltersState,
-  type SortingState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+// import {
+//   type ColumnDef,
+//   type ColumnFiltersState,
+//   type SortingState,
+//   type VisibilityState,
+//   flexRender,
+//   getCoreRowModel,
+//   getPaginationRowModel,
+//   useReactTable,
+// } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "../../components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -20,9 +28,9 @@ interface DataTableProps<TData, TValue> {
 }
 
 export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([])
+  // const [sorting, setSorting] = useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  // const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState({})
 
   const table = useReactTable({

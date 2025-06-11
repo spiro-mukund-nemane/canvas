@@ -16,14 +16,15 @@ import {
   addUploadedLayer,
   fitToLayer,
 } from "../../../store/map/layerSlice"
-import type { MutableRefObject } from "react"
-import type { Map as MaplibreMap } from "maplibre-gl"
+// import type { MutableRefObject } from "react"
+// import type { Map as MaplibreMap } from "maplibre-gl"
 
-interface LayerManagerProps {
-  mapRef: MutableRefObject<MaplibreMap | null>
-}
+// interface LayerManagerProps {
+//   mapRef: MutableRefObject<MaplibreMap | null>
+// }
 
-export function LayerManager({ mapRef }: LayerManagerProps) {
+// export function LayerManager({ mapRef }: LayerManagerProps) {
+export function LayerManager() {
   const dispatch = useDispatch<AppDispatch>()
   const { layerGroups } = useSelector((state: RootState) => state.layer)
   const selectedLayerId = useSelector((state: RootState) => state.layer.selectedLayerId)

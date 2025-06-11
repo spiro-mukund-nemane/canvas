@@ -7,7 +7,6 @@ import {
   Source,
   GeolocateControl,
   Layer,
-  AttributionControl,
   type ViewStateChangeEvent,
   Popup,
 } from "react-map-gl/maplibre"
@@ -23,7 +22,7 @@ import { FeaturePopup } from "./popup/feature-popup"
 
 export default function MapComponent() {
   const dispatch = useDispatch<AppDispatch>()
-  const { layerGroups, loading, selectedLayerId, selectedFeature, mapStyle, fitToLayerId } = useSelector(
+  const { layerGroups, loading, selectedFeature, mapStyle, fitToLayerId } = useSelector(
     (state: RootState) => state.layer,
   )
 
@@ -95,12 +94,12 @@ export default function MapComponent() {
       setMapLoaded(true)
 
       // Ensure the style is fully loaded
-      mapRef.current.once("styledata", () => {
+      mapRef.current?.once("styledata", () => {
         console.log("Map style fully loaded")
       })
 
       // Add click handler for features
-      mapRef.current.on("click", (e) => {
+      mapRef.current?.on("click", (e) => {
         if (!mapRef.current) return
 
         // Get all visible layers
@@ -142,84 +141,90 @@ export default function MapComponent() {
       .flatMap((group) =>
         group.visible
           ? group.layers.map((layer) => {
-              if (!layer.visible) return null
+            if (!layer.visible) return null
 
-              // Handle MBTiles layers
-              if (layer.mbtilesUrl) {
-                return (
-                  <Source
-                    key={layer.id}
-                    id={`source-${layer.id}`}
-                    type="vector"
-                    tiles={[layer.mbtilesUrl]}
-                    minzoom={0}
-                    maxzoom={22}
-                  >
-                    <Layer
-                      id={layer.id}
-                      source-layer="default" // This might need to be adjusted based on your MBTiles structure
-                      type={layer.mapLayerType}
-                      paint={{
-                        // Apply appropriate paint properties based on layer type
-                        ...(layer.mapLayerType === "circle" && {
-                          "circle-radius": layer.style.size,
-                          "circle-color": layer.style.color,
-                          "circle-opacity": layer.style.opacity,
-                          "circle-stroke-color": layer.style.stroke,
-                          "circle-stroke-width": layer.style.strokeWidth,
-                        }),
-                        ...(layer.mapLayerType === "line" && {
-                          "line-color": layer.style.color,
-                          "line-width": layer.style.strokeWidth,
-                          "line-opacity": layer.style.opacity,
-                        }),
-                        ...(layer.mapLayerType === "fill" && {
-                          "fill-color": layer.style.color,
-                          "fill-opacity": layer.style.opacity,
-                          "fill-outline-color": layer.style.stroke,
-                        }),
-                      }}
-                    />
-                  </Source>
-                )
+            // Handle MBTiles layers
+            if (layer.mbtilesUrl) {
+              return (
+                <Source
+                  key={layer.id}
+                  id={`source-${layer.id}`}
+                  type="vector"
+                  tiles={[layer.mbtilesUrl]}
+                  minzoom={0}
+                  maxzoom={22}
+                >
+                  <Layer
+                    id={layer.id}
+                    source-layer="default" // This might need to be adjusted based on your MBTiles structure
+                    type={layer.mapLayerType}
+                    paint={{
+                      // Apply appropriate paint properties based on layer type
+                      ...(layer.mapLayerType === "circle" && {
+                        "circle-radius": layer.style.size,
+                        "circle-color": layer.style.color,
+                        "circle-opacity": layer.style.opacity,
+                        "circle-stroke-color": layer.style.stroke,
+                        "circle-stroke-width": layer.style.strokeWidth,
+                      }),
+                      ...(layer.mapLayerType === "line" && {
+                        "line-color": layer.style.color,
+                        "line-width": layer.style.strokeWidth,
+                        "line-opacity": layer.style.opacity,
+                      }),
+                      ...(layer.mapLayerType === "fill" && {
+                        "fill-color": layer.style.color,
+                        "fill-opacity": layer.style.opacity,
+                        "fill-outline-color": layer.style.stroke,
+                      }),
+                    }}
+                  />
+                </Source>
+              )
+            }
+
+            // Handle GeoJSON layers
+            if (layer.data) {
+              const layerStyle = {
+                // Circle (Point) style
+                "circle-radius": layer.mapLayerType === "circle" ? layer.style.size : undefined,
+                "circle-color": layer.mapLayerType === "circle" ? layer.style.color : undefined,
+                "circle-opacity": layer.mapLayerType === "circle" ? layer.style.opacity : undefined,
+                "circle-stroke-color": layer.mapLayerType === "circle" ? layer.style.stroke : undefined,
+                "circle-stroke-width": layer.mapLayerType === "circle" ? layer.style.strokeWidth : undefined,
+
+                // Line style
+                "line-color": layer.mapLayerType === "line" ? layer.style.color : undefined,
+                "line-width": layer.mapLayerType === "line" ? layer.style.strokeWidth : undefined,
+                "line-opacity": layer.mapLayerType === "line" ? layer.style.opacity : undefined,
+
+                // Fill (Polygon) style
+                "fill-color": layer.mapLayerType === "fill" ? layer.style.color : undefined,
+                "fill-opacity": layer.mapLayerType === "fill" ? layer.style.opacity : undefined,
+                "fill-outline-color": layer.mapLayerType === "fill" ? layer.style.stroke : undefined,
               }
 
-              // Handle GeoJSON layers
-              if (layer.data) {
-                const layerStyle = {
-                  // Circle (Point) style
-                  "circle-radius": layer.mapLayerType === "circle" ? layer.style.size : undefined,
-                  "circle-color": layer.mapLayerType === "circle" ? layer.style.color : undefined,
-                  "circle-opacity": layer.mapLayerType === "circle" ? layer.style.opacity : undefined,
-                  "circle-stroke-color": layer.mapLayerType === "circle" ? layer.style.stroke : undefined,
-                  "circle-stroke-width": layer.mapLayerType === "circle" ? layer.style.strokeWidth : undefined,
+              // Remove undefined properties
+              Object.keys(layerStyle).forEach((key) => layerStyle[key] === undefined && delete layerStyle[key])
+              // Object.keys(layerStyle).forEach((key) => {
+              //   const k = key as keyof typeof layerStyle;
+              //   if (layerStyle[k] === undefined) {
+              //     delete layerStyle[k];
+              //   }
+              // });
 
-                  // Line style
-                  "line-color": layer.mapLayerType === "line" ? layer.style.color : undefined,
-                  "line-width": layer.mapLayerType === "line" ? layer.style.strokeWidth : undefined,
-                  "line-opacity": layer.mapLayerType === "line" ? layer.style.opacity : undefined,
+              // Use filtered data if available, otherwise use original data
+              const sourceData = layer.style.filteredData || layer.data
 
-                  // Fill (Polygon) style
-                  "fill-color": layer.mapLayerType === "fill" ? layer.style.color : undefined,
-                  "fill-opacity": layer.mapLayerType === "fill" ? layer.style.opacity : undefined,
-                  "fill-outline-color": layer.mapLayerType === "fill" ? layer.style.stroke : undefined,
-                }
+              return (
+                <Source key={layer.id} type="geojson" data={sourceData}>
+                  <Layer id={layer.id} type={layer.mapLayerType} paint={layerStyle} />
+                </Source>
+              )
+            }
 
-                // Remove undefined properties
-                Object.keys(layerStyle).forEach((key) => layerStyle[key] === undefined && delete layerStyle[key])
-
-                // Use filtered data if available, otherwise use original data
-                const sourceData = layer.style.filteredData || layer.data
-
-                return (
-                  <Source key={layer.id} type="geojson" data={sourceData}>
-                    <Layer id={layer.id} type={layer.mapLayerType} paint={layerStyle} />
-                  </Source>
-                )
-              }
-
-              return null
-            })
+            return null
+          })
           : [],
       )
       .filter(Boolean)
@@ -289,7 +294,8 @@ export default function MapComponent() {
           </Popup>
         )}
       </Map>
-      <LayerManager mapRef={mapRef} />
+      {/* <LayerManager mapRef={mapRef} /> */}
+      <LayerManager />
     </div>
   )
 }

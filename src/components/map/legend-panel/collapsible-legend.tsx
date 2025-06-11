@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { ChevronRight, FolderPlus, Upload, Layers2 } from "lucide-react"
 import { Button } from "../../ui/button"
-import { ScrollArea, ScrollBar } from "../../ui/scroll-area"
+import { ScrollArea} from "../../ui/scroll-area"
 import { Separator } from "../../ui/separator"
 import { DragDropContext } from "@hello-pangea/dnd"
 import { AddNewLayerDialog } from "./../upload-files/add-new-layer"

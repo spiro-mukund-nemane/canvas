@@ -3,8 +3,9 @@ import { useEffect, useState, useRef } from "react"
 import { type MapRef, Marker } from "react-map-gl/maplibre"
 import { useDispatch, useSelector} from "react-redux"
 import { v4 as uuidv4 } from "uuid"
-import { X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Feature, LineString } from 'geojson';
+// import { X } from "lucide-react"
+import { Button } from "../../../components/ui/button"
 import RouteInfoPanel from "./route-info-panel"
 import { cancelMeasuring } from "../../../store/map/measurementSlice"
 import type { RootState } from "../../../store" // Adjust the import path as needed
@@ -112,18 +113,18 @@ export function DistanceMeasureControl({mapRef, apiUrl, apiKey }: DistanceMeasur
     const map = mapRef.current
     if (!map) return
 
-    const feature = await fetchRoute(startPoint.coordinates, endPoint.coordinates)
+    const feature = await fetchRoute(startPoint.coordinates, endPoint.coordinates) as Feature<LineString>;
     const segmentId = uuidv4()
 
     console.log("Feature to add on map:",feature)
 
     // Add the line to the map
-    map.addSource(`line-${segmentId}`, {
+    map.getMap().addSource(`line-${segmentId}`, {
       type: "geojson",
       data: feature,
     })
 
-    map.addLayer({
+    map.getMap().addLayer({
       id: `line-${segmentId}`,
       type: "line",
       source: `line-${segmentId}`,
@@ -141,9 +142,15 @@ export function DistanceMeasureControl({mapRef, apiUrl, apiKey }: DistanceMeasur
         id: segmentId,
         startPointId: startPoint.id,
         endPointId: endPoint.id,
-        distance: feature.properties.distance,
-        duration: feature.properties.duration,
-        geometry: feature.geometry,
+        distance: feature.properties?.distance??"unknown",
+        duration: feature.properties?.duration?? "unknown",
+        // geometry: feature.geometry,
+        geometry:{
+          type:"LineString",
+          coordinates: feature.geometry.coordinates.map(
+            (coord):[number,number]=>[coord[0],coord[1]]
+          ),
+        }
       },
     ])
   }
@@ -155,8 +162,8 @@ export function DistanceMeasureControl({mapRef, apiUrl, apiKey }: DistanceMeasur
 
     segments.forEach((segment) => {
       try {
-        map.removeLayer(`line-${segment.id}`)
-        map.removeSource(`line-${segment.id}`)
+        map.getMap().removeLayer(`line-${segment.id}`)
+        map.getMap().removeSource(`line-${segment.id}`)
       } catch (err) {
         console.warn("Error cleaning layers:", err)
       }
@@ -173,8 +180,8 @@ export function DistanceMeasureControl({mapRef, apiUrl, apiKey }: DistanceMeasur
 
     connectedSegments.forEach((segment) => {
       try {
-        map.removeLayer(`line-${segment.id}`)
-        map.removeSource(`line-${segment.id}`)
+        map.getMap().removeLayer(`line-${segment.id}`)
+        map.getMap().removeSource(`line-${segment.id}`)
       } catch (err) {
         console.warn("Error removing segment:", err)
       }
@@ -202,8 +209,8 @@ const removeSegment = (segmentId: string) => {
 
   // Remove the segment layer and source from the map
   try {
-    map.removeLayer(`line-${segmentId}`);
-    map.removeSource(`line-${segmentId}`);
+    map.getMap().removeLayer(`line-${segmentId}`);
+    map.getMap().removeSource(`line-${segmentId}`);
   } catch (err) {
     console.warn("Error removing segment from map:", err);
   }
@@ -237,8 +244,8 @@ const removeSegment = (segmentId: string) => {
     // Remove collected segments
     Array.from(segmentsToRemove).forEach((id) => {
       try {
-        map.removeLayer(`line-${id}`);
-        map.removeSource(`line-${id}`);
+        map.getMap().removeLayer(`line-${id}`);
+        map.getMap().removeSource(`line-${id}`);
       } catch (err) {
         console.warn("Error removing segment:", err);
       }

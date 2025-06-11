@@ -1,11 +1,11 @@
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
+import { Button } from "../../../components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import { MapPin, Clock, Route, X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Point } from "maplibre-gl"
+import { Badge } from "../../../components/ui/badge"
+import { ScrollArea } from "../../../components/ui/scroll-area"
+// import { Point } from "maplibre-gl"
 
 interface RoutePoint {
   id: string
@@ -155,7 +155,7 @@ export default function RouteInfoPanel({
                       <>
                         <h3 className="text-sm font-medium mt-4">Segments</h3>
                         <div className="space-y-2">
-                          {segments.map((segment, index) => {
+                          {segments.map((segment, _index) => {
                             const startPointIndex = points.findIndex((p) => p.id === segment.startPointId)
                             const endPointIndex = points.findIndex((p) => p.id === segment.endPointId)
 

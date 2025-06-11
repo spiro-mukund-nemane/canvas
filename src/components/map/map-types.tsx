@@ -1,12 +1,13 @@
-export type GeometryType = "Point" | "Line" | "Polygon"
-export type MapLayerType = "circle" | "line" | "fill" | "raster"
+export type GeometryType = 'Point' | 'Line' | 'Polygon'
+export type MapLayerType = 'fill' | 'circle' | 'line' | 'fill' | 'raster'
 
 export interface LayerStyle {
-  size: number
-  color: string
-  opacity: number
-  stroke: string
-  strokeWidth: number
+  size?: number
+  color?: string
+  opacity?: number
+  stroke?: string
+  strokeWidth?: number
+  filteredData?: GeoJSON.FeatureCollection;
 }
 
 export interface Layer {
@@ -18,7 +19,7 @@ export interface Layer {
   data?: any // GeoJSON data
   mbtilesUrl?: string // URL for mbtiles source
   style: LayerStyle
-  fileId?: number
+  fileId?: string
 }
 
 export interface LayerGroup {

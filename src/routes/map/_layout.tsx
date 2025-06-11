@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import Header from '@/components/map/header'
+import Header from '../../components/map/header'
 // import MapComponent from '../../../components/map/mapView'
 
 

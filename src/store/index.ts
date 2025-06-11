@@ -1,17 +1,17 @@
 import { configureStore } from "@reduxjs/toolkit"
 import projectReducer from "./project/projectSlice"
-import fileReducer from "./file/fileSlice"
+// import fileReducer from "./file/fileSlice"
 import layerReducer from "./map/layerSlice"
 import measurementReducer from "./map/measurementSlice";
-import analysisReducer from './analysis/analysisSlice'
+// import analysisReducer from './analysis/analysisSlice'
 
 // Configure the Redux store
 const store = configureStore({
   reducer: {
     project: projectReducer,
-    file: fileReducer,
+    // file: fileReducer,
     layer: layerReducer,
-    analysis: analysisReducer,
+    // analysis: analysisReducer,
     measurement: measurementReducer,
   },
   middleware: (getDefaultMiddleware) =>

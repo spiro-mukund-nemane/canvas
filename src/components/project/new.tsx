@@ -7,7 +7,8 @@ import {
 import { Input } from "../../components/ui/input"
 import { ImageIcon } from "lucide-react"
 import { useDispatch } from "react-redux"
-import { useNavigate } from "@tanstack/react-router"
+// import { useNavigate } from "@tanstack/react-router"
+import {useApiKeyNavigate} from '../../lib/apiKeyNav'
 import { createProject } from "../../store/project/projectSlice"
 import type { AppDispatch } from "../../store"
 import { toast } from "sonner"
@@ -17,7 +18,7 @@ export default function CreateProject() {
   const [projectName, setProjectName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
-  const navigate = useNavigate()
+  const navigate = useApiKeyNavigate()
 
   const handleCreateProject = async () => {
     if (!projectName.trim()) return

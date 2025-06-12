@@ -34,7 +34,7 @@ export const uploadGeoFile = createAsyncThunk(
       }
 
       // Make API request to backend using the new endpoint
-      const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}files/upload`, {
+      const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}files/upload?key=${import.meta.env.VITE_PUBLIC_BACKEND_API_KEY}`, {
         method: "POST",
         body: formData,
       })
@@ -59,7 +59,7 @@ export const uploadGeoFile = createAsyncThunk(
       if (displayName.toLowerCase().endsWith(".mbtiles")) {
         dispatch(
           addUploadedLayer({
-            mbtilesUrl: `${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}files/mbtiles/${fileId}`,
+            mbtilesUrl: `${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}files/mbtiles/${fileId}?key=${import.meta.env.VITE_PUBLIC_BACKEND_API_KEY}`,
             fileName: displayName,
             layerType: "mbtiles",
             fileId,
@@ -69,7 +69,7 @@ export const uploadGeoFile = createAsyncThunk(
       }
 
       // For other geo files, fetch the GeoJSON data
-      const geoJsonResponse = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}files/geojson/by-id/${fileId}`)
+      const geoJsonResponse = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}files/geojson/by-id/${fileId}?key=${import.meta.env.VITE_PUBLIC_BACKEND_API_KEY}`)
 
       if (!geoJsonResponse.ok) {
         throw new Error(`Failed to fetch GeoJSON data: ${geoJsonResponse.status}`)

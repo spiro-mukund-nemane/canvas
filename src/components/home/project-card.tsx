@@ -12,7 +12,8 @@ import {
   AlertDialogTrigger,
 } from "../../components/ui/alert-dialog"
 import { Button } from "../../components/ui/button"
-import { useNavigate } from "@tanstack/react-router"
+// import { useNavigate } from "@tanstack/react-router"
+import {useApiKeyNavigate} from '../../lib/apiKeyNav'
 import { useDispatch } from "react-redux"
 import type { Project } from "../../store/project/projectSlice"
 import { deleteProject, setCurrentProject } from "../../store/project/projectSlice"
@@ -62,14 +63,14 @@ const formatDate = (dateString?: string) => {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const navigate = useNavigate()
+  const navigate = useApiKeyNavigate()
   const projectColor = getProjectColor(project.name)
   const dispatch = useDispatch<AppDispatch>()
 
   const handleOpenProject = () => {
     // Set the current project before navigating
     dispatch(setCurrentProject(project.id))
-    navigate({ to: `/map/${project.id}` })
+    navigate({ to: `/map/${project.id}` as "/map/$mapId" })
   }
 
   const handleDeleteProject = () => {

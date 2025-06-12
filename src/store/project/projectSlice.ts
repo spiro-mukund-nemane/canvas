@@ -22,7 +22,7 @@ const initialState: ProjectState = {
 
 // Async thunks
 export const fetchProjects = createAsyncThunk("project/fetchProjects", async () => {
-  const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects`)
+  const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects?key=${import.meta.env.VITE_PUBLIC_BACKEND_API_KEY}`)
   if (!response.ok) {
     throw new Error("Failed to fetch projects")
   }
@@ -30,7 +30,7 @@ export const fetchProjects = createAsyncThunk("project/fetchProjects", async () 
 })
 
 export const fetchProjectById = createAsyncThunk("project/fetchProjectById", async (projectId: string) => {
-  const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects/${projectId}`)
+  const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects/${projectId}?key=${import.meta.env.VITE_PUBLIC_BACKEND_API_KEY}`)
   if (!response.ok) {
     throw new Error("Failed to fetch project by ID")
   }
@@ -38,7 +38,7 @@ export const fetchProjectById = createAsyncThunk("project/fetchProjectById", asy
 })
 
 export const createProject = createAsyncThunk("project/createProject", async (projectName: string) => {
-  const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects`, {
+  const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects?key=${import.meta.env.VITE_PUBLIC_BACKEND_API_KEY}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -54,7 +54,7 @@ export const createProject = createAsyncThunk("project/createProject", async (pr
 export const updateProject = createAsyncThunk(
   "project/updateProject",
   async ({ id, data }: { id: string; data: any }) => {
-    const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects/${id}`, {
+    const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects/${id}?key=${import.meta.env.VITE_PUBLIC_BACKEND_API_KEY}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export const updateProject = createAsyncThunk(
 )
 
 export const deleteProject = createAsyncThunk("project/deleteProject", async (projectId: string) => {
-  const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects/${projectId}`, {
+  const response = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}projects/${projectId}?key=${import.meta.env.VITE_PUBLIC_BACKEND_API_KEY}`, {
     method: "DELETE",
   })
   if (!response.ok) {

@@ -30,7 +30,8 @@ import { Loader2 } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../store"
 import { addUploadedLayer } from "../../store/map/layerSlice"
-import { useNavigate } from "@tanstack/react-router"
+// import { useNavigate } from "@tanstack/react-router"
+import {useApiKeyNavigate} from '../../lib/apiKeyNav'
 // import {updateFile } from "../../store/file/fileSlice"
 // import { toggleMeasuring, cancelMeasuring } from '../../store/map/measurementSlice'
 import { toggleMeasuring} from '../../store/map/measurementSlice'
@@ -40,7 +41,7 @@ import { toggleMeasuring} from '../../store/map/measurementSlice'
 
 export default function Header() {
   const dispatch = useDispatch<AppDispatch>()
-  const navigate = useNavigate()
+  const navigate = useApiKeyNavigate()
   // const { currentProject } = useSelector((state: RootState) => state.project)
   // const { files, loading } = useSelector((state: RootState) => state.file)
   const isMeasuring = useSelector((state: RootState) => state.measurement.isMeasuring);

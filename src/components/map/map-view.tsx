@@ -17,7 +17,7 @@ import type { RootState, AppDispatch } from "../../store"
 import { setSelectedFeature, clearFitToLayer } from "../../store/map/layerSlice"
 import { DistanceMeasureControl } from "./distance/distance"
 import { FeaturePopup } from "./popup/feature-popup"
-import type {MapRef} from 'react-map-gl/maplibre';
+import type { MapRef } from 'react-map-gl/maplibre';
 
 export default function MapComponent() {
   const dispatch = useDispatch<AppDispatch>()
@@ -137,10 +137,10 @@ export default function MapComponent() {
   )
 
   const renderLayers = useCallback(() => {
-  return layerGroups
-    .flatMap((group) =>
-      group.visible
-        ? group.layers.map((layer) => {
+    return layerGroups
+      .flatMap((group) =>
+        group.visible
+          ? group.layers.map((layer) => {
             if (!layer.visible) return null
 
             // Handle MBTiles layers
@@ -227,10 +227,10 @@ export default function MapComponent() {
 
               return (
                 <Source key={layer.id} type="geojson" data={sourceData}>
-                  <Layer 
-                    id={layer.id} 
+                  <Layer
+                    id={layer.id}
                     type={layer.mapLayerType as "circle" | "line" | "fill"} // Explicit type assertion
-                    paint={getPaintProps()} 
+                    paint={getPaintProps()}
                   />
                 </Source>
               )
@@ -238,10 +238,10 @@ export default function MapComponent() {
 
             return null
           })
-        : [],
-    )
-    .filter(Boolean)
-}, [layerGroups])
+          : [],
+      )
+      .filter(Boolean)
+  }, [layerGroups])
 
   const getMapStyleUrl = () => {
     if (mapStyle === "dark") {
@@ -285,7 +285,16 @@ export default function MapComponent() {
           customAttribution={'<a href="https://www.spironet.com/">© Spiro</a>'}
           position={"bottom-right"}
         /> */}
-        <img className="absolute w-20 h-auto bottom-8 left-4" src={logo || "/placeholder.svg"} />
+        {/* <img className="absolute w-20 h-auto bottom-8 left-4" src={logo || "/placeholder.svg"} /> */}
+        <img
+          className="absolute w-20 h-auto bottom-8 left-4"
+          src={logo}
+          alt="Logo"
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
+
 
         {renderLayers()}
 

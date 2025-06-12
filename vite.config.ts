@@ -8,7 +8,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 export default defineConfig({
-  base: '/reatil-pro-max/',
+  base: '/retail-pro-max/',
   plugins: [
     react(),
     tailwindcss(),

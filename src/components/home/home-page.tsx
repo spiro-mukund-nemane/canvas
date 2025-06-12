@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { useNavigate } from "@tanstack/react-router"
+// import { useNavigate } from "@tanstack/react-router"
+import {useApiKeyNavigate} from '../../lib/apiKeyNav'
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Plus, Search } from "lucide-react"
@@ -10,7 +11,8 @@ import type { AppDispatch, RootState } from "../../store"
 
 export function HomePage() {
   const dispatch = useDispatch<AppDispatch>()
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
+  const navigate = useApiKeyNavigate()
   const { projects, loading } = useSelector((state: RootState) => state.project)
   const [searchTerm, setSearchTerm] = useState("")
 

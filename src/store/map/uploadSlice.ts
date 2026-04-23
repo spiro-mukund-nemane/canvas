@@ -62,19 +62,34 @@ export const uploadGeoFile = createAsyncThunk(
       const displayName = data.display_name || "Uploaded Layer"
 
       // If it's an MBTiles file, add it directly
-      if (displayName.toLowerCase().endsWith(".mbtiles")) {
+      const geometryType = data.details?.geometry_type || "Unknown"
+      // Try to fetch TileJSON first
+      try{
+        const tileJsonResponse = await fetch(withKey(`${baseUrl}tilejson/${fileId}`))
+
+        if (tileJsonResponse.ok){
+          const tileJson = await tileJsonResponse.json()
+
+        // Add the layer using vector tiles
         dispatch(
           addUploadedLayer({
-            mbtilesUrl: withKey(`${baseUrl}files/mbtiles/${fileId}`),
+            tileJson,
             fileName: displayName,
-            layerType: "mbtiles",
+            layerType: "vector-tiles",
             fileId,
+            geometryType,
           }),
         )
         return data
       }
+      } catch (tileError){
+        console.warn("Failed to fetch TileJSON, falling back to GEOJSON:", tileError)
+      }
+
+      // Fallback to GeoJSON if TileJSON fails
 
       // For other geo files, fetch the GeoJSON data
+      try{
       const geoJsonResponse = await fetch(withKey(`${baseUrl}files/geojson/by-id/${fileId}`))
 
       if (!geoJsonResponse.ok) {
@@ -89,10 +104,54 @@ export const uploadGeoFile = createAsyncThunk(
           geoJSON,
           fileName: displayName,
           fileId,
+          geometryType,
         }),
       )
+    } catch (geoJsonError){
+      throw new Error (`Failed to fetch both TileJSON and GeoJSON: ${geoJsonError}`)
+    }
 
       return data
+    } catch (error) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message)
+      }
+      return rejectWithValue("An unknown error occurred")
+    }
+  },
+)
+
+
+// New thunk to load all project layers when opening a project
+export const loadProjectLayers = createAsyncThunk(
+  "upload/loadProjectLayers",
+  async (projectId: string, { dispatch, rejectWithValue }) => {
+    try {
+      // Try to fetch composite TileJSON for the entire project
+      const tileJsonResponse = await fetch(
+        `${import.meta.env.VITE_PUBLIC_BACKEND_API_URL}tilejson/project/${projectId}`,
+      )
+
+      if (tileJsonResponse.ok) {
+        const tileJson = await tileJsonResponse.json()
+
+        // Add composite project layer
+        dispatch(
+          addUploadedLayer({
+            tileJson,
+            fileName: `Project ${projectId}`,
+            layerType: "project-tiles",
+            fileId: projectId,
+            geometryType: "Mixed",
+          }),
+        )
+        return { success: true, type: "composite" }
+      }
+
+      // If composite tiles are not available, we could fetch individual files
+      // This would require a separate API endpoint to list project files
+      console.warn("Composite project tiles not available")
+      return { success: false, message: "Composite project tiles not available" }
     } catch (error) {
       if (error instanceof Error) {
         return rejectWithValue(error.message)
@@ -123,6 +182,17 @@ const uploadSlice = createSlice({
       .addCase(uploadGeoFile.rejected, (state, action) => {
         state.isUploading = false
         state.error = (action.payload as string) || "Upload failed"
+      })
+      .addCase(loadProjectLayers.pending, (state) => {
+        state.isUploading = true
+        state.error = null
+      })
+      .addCase(loadProjectLayers.fulfilled, (state) => {
+        state.isUploading = false
+      })
+      .addCase(loadProjectLayers.rejected, (state, action) => {
+        state.isUploading = false
+        state.error = (action.payload as string) || "Failed to load project layers"
       })
   },
 })

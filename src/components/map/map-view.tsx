@@ -15,6 +15,7 @@ import { LayerManager } from "./legend-panel/layer-manager"
 import { useSelector, useDispatch } from "react-redux"
 import type { RootState, AppDispatch } from "../../store"
 import { setSelectedFeature, clearFitToLayer } from "../../store/map/layerSlice"
+import { loadProjectLayers } from "../../store/map/uploadSlice"
 import { DistanceMeasureControl } from "./distance/distance"
 import { FeaturePopup } from "./popup/feature-popup"
 import type { MapRef } from 'react-map-gl/maplibre';
@@ -24,6 +25,7 @@ export default function MapComponent() {
   const { layerGroups, loading, selectedFeature, mapStyle, fitToLayerId } = useSelector(
     (state: RootState) => state.layer,
   )
+  const {currentProject} = useSelector((state:RootState) => state.project)
 
   const [viewState, setViewState] = useState({
     longitude: 78.9629,
@@ -35,6 +37,13 @@ export default function MapComponent() {
   const mapRef = useRef<MapRef | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false)
 
+  // Load project layers when project is opened 
+  useEffect(() =>{
+    if(currentProject && mapLoaded){
+      dispatch(loadProjectLayers(currentProject.id))
+    }
+  },[dispatch, currentProject,mapLoaded])
+
   // Handle fitToLayer requests
   useEffect(() => {
     if (fitToLayerId && mapRef.current && mapLoaded) {
@@ -42,6 +51,13 @@ export default function MapComponent() {
 
       if (layer?.data) {
         fitMapToLayer(layer.data)
+      }else if(layer?.tileJson?.bounds){
+        // Fit to TileJSON bounds
+        const bounds = layer.tileJson.bounds
+        if (bounds && bounds.length === 4){
+          const [west,south,east,north] = bounds
+          mapRef.current.fitBounds([west,south,east,north],{padding: 40})
+        }
       }
 
       // Clear the fit request after processing
@@ -142,6 +158,53 @@ export default function MapComponent() {
         group.visible
           ? group.layers.map((layer) => {
             if (!layer.visible) return null
+
+            // Handle Vector Tiles layers (preferred method)
+              if (layer.tileJson) {
+                const tileUrls = layer.tileJson.tiles || []
+
+                if (tileUrls.length === 0) return null
+
+                // Get the source layer name from TileJSON
+                const sourceLayer = layer.tileJson.vector_layers?.[0]?.id || "default"
+
+                return (
+                  <Source
+                    key={layer.id}
+                    id={`source-${layer.id}`}
+                    type="vector"
+                    tiles={tileUrls}
+                    minzoom={layer.tileJson.minzoom || 0}
+                    maxzoom={layer.tileJson.maxzoom || 22}
+                  >
+                    <Layer
+                      id={layer.id}
+                      source-layer={sourceLayer}
+                      type={layer.mapLayerType}
+                      paint={{
+                        // Apply appropriate paint properties based on layer type
+                        ...(layer.mapLayerType === "circle" && {
+                          "circle-radius": layer.style.size,
+                          "circle-color": layer.style.color,
+                          "circle-opacity": layer.style.opacity,
+                          "circle-stroke-color": layer.style.stroke,
+                          "circle-stroke-width": layer.style.strokeWidth,
+                        }),
+                        ...(layer.mapLayerType === "line" && {
+                          "line-color": layer.style.color,
+                          "line-width": layer.style.strokeWidth,
+                          "line-opacity": layer.style.opacity,
+                        }),
+                        ...(layer.mapLayerType === "fill" && {
+                          "fill-color": layer.style.color,
+                          "fill-opacity": layer.style.opacity,
+                          "fill-outline-color": layer.style.stroke,
+                        }),
+                      }}
+                    />
+                  </Source>
+                )
+              }
 
             // Handle MBTiles layers
             if (layer.mbtilesUrl) {

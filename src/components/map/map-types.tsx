@@ -7,7 +7,8 @@ export interface LayerStyle {
   opacity?: number
   stroke?: string
   strokeWidth?: number
-  filteredData?: GeoJSON.FeatureCollection;
+  // filteredData?: GeoJSON.FeatureCollection;
+  filteredData?: any;
 }
 
 export interface Layer {
@@ -18,6 +19,7 @@ export interface Layer {
   visible: boolean
   data?: any // GeoJSON data
   mbtilesUrl?: string // URL for mbtiles source
+  tileJson?: any // TileJSON metadata for vector tiles (preferred)
   style: LayerStyle
   fileId?: string
 }

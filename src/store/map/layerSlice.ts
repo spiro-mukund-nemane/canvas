@@ -2,21 +2,23 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import type { LayerGroup, Layer, LayerStyle, FeatureInfo } from "../../components/map/map-types"
 import { v4 as uuidv4 } from "uuid"
 
-// Helper function to determine geometry type from GeoJSON
-function detectGeometryType(geojson: any): "Point" | "Line" | "Polygon" {
-  if (!geojson || !geojson.features || geojson.features.length === 0) {
-    return "Point" // default
+// Helper function to determine geometry type from GeoJSON or TileJSON
+function detectGeometryType(data: any, geometryType?: string): "Point" | "Line" | "Polygon" {
+  // If geometry type is provided from API, use it
+  if (geometryType) {
+    if (geometryType.toLowerCase().includes("point")) return "Point"
+    if (geometryType.toLowerCase().includes("line")) return "Line"
+    if (geometryType.toLowerCase().includes("polygon")) return "Polygon"
   }
 
-  const firstFeature = geojson.features[0]
-  const geometryType = firstFeature.geometry?.type
+  // Fallback to GeoJSON detection
+  if (data?.features && data.features.length > 0) {
+    const firstFeature = data.features[0]
+    const geomType = firstFeature.geometry?.type
 
-  if (geometryType?.includes("Point")) {
-    return "Point"
-  } else if (geometryType?.includes("Line")) {
-    return "Line"
-  } else if (geometryType?.includes("Polygon")) {
-    return "Polygon"
+    if (geomType?.includes("Point")) return "Point"
+    if (geomType?.includes("Line")) return "Line"
+    if (geomType?.includes("Polygon")) return "Polygon"
   }
 
   return "Point" // default fallback
@@ -203,15 +205,92 @@ const layerSlice = createSlice({
         geoJSON?: any
         fileName: string
         mbtilesUrl?: string
-        layerType?: "geojson" | "mbtiles"
+        layerType?: "geojson" | "mbtiles" | "vector-tiles"| "project-tiles"
+        tileJson?: any,
         fileId?: string
+        geometryType?: string
       }>,
     ) => {
-      const { geoJSON, fileName, mbtilesUrl, layerType = "geojson", fileId } = action.payload
+      const { geoJSON, fileName, mbtilesUrl,tileJson, layerType = "geojson", fileId,geometryType } = action.payload
       let newLayerId = ""
 
+      // For Vector Tiles layers (new preferred method)
+      if (layerType === "vector-tiles" && tileJson) {
+        newLayerId = `layer-${uuidv4()}`
+
+        // Detect geometry type from TileJSON or use provided type
+        const detectedGeometryType = detectGeometryType(null, geometryType)
+        const mapLayerType = getMapLibreLayerType(detectedGeometryType)
+
+        const newLayer: Layer = {
+          id: newLayerId,
+          name: fileName.replace(/\.[^/.]+$/, ""),
+          geometryType: detectedGeometryType,
+          mapLayerType,
+          visible: true,
+          tileJson,
+          style: {
+            size: 6,
+            color: getRandomColor(),
+            opacity: 0.8,
+            stroke: getRandomStrokeColor(),
+            strokeWidth: 0.5,
+          },
+          fileId,
+        }
+
+        // Find or create the "Uploaded" group
+        const uploadedGroupIndex = state.layerGroups.findIndex((g) => g.id === "uploaded")
+
+        if (uploadedGroupIndex !== -1) {
+          state.layerGroups[uploadedGroupIndex].layers.push(newLayer)
+        } else {
+          state.layerGroups.push({
+            id: "uploaded",
+            name: "Uploaded Layers",
+            visible: true,
+            layers: [newLayer],
+          })
+        }
+      }
+      // For Project composite tiles
+      else if (layerType === "project-tiles" && tileJson) {
+        newLayerId = `project-layer-${uuidv4()}`
+
+        const newLayer: Layer = {
+          id: newLayerId,
+          name: fileName,
+          geometryType: "Polygon", // Mixed geometry, default to polygon
+          mapLayerType: "fill",
+          visible: true,
+          tileJson,
+          style: {
+            size: 6,
+            color: getRandomColor(),
+            opacity: 0.8,
+            stroke: getRandomStrokeColor(),
+            strokeWidth: 0.5,
+          },
+          fileId,
+        }
+
+        // Find or create the "Project Layers" group
+        const projectGroupIndex = state.layerGroups.findIndex((g) => g.id === "project-layers")
+
+        if (projectGroupIndex !== -1) {
+          state.layerGroups[projectGroupIndex].layers.push(newLayer)
+        } else {
+          state.layerGroups.push({
+            id: "project-layers",
+            name: "Project Layers",
+            visible: true,
+            layers: [newLayer],
+          })
+        }
+      }
+
       // For MBTiles layers
-      if (layerType === "mbtiles" && mbtilesUrl) {
+      else if (layerType === "mbtiles" && mbtilesUrl) {
         newLayerId = `layer-${uuidv4()}`
         const newLayer: Layer = {
           id: newLayerId,
@@ -244,11 +323,11 @@ const layerSlice = createSlice({
           })
         }
       }
-      // For GeoJSON layers
+      // For GeoJSON layers (fallback)
       else if (geoJSON) {
         // Detect geometry type
-        const geometryType = detectGeometryType(geoJSON)
-        const mapLayerType = getMapLibreLayerType(geometryType)
+        const detectedGeometryType = detectGeometryType(geoJSON,geometryType)
+        const mapLayerType = getMapLibreLayerType(detectedGeometryType)
 
         // Generate a random color
         const randomColor = getRandomColor()
@@ -259,7 +338,7 @@ const layerSlice = createSlice({
         const newLayer: Layer = {
           id: newLayerId,
           name: fileName.replace(/\.[^/.]+$/, ""),
-          geometryType,
+          geometryType: detectedGeometryType,
           mapLayerType,
           visible: true,
           data: geoJSON,

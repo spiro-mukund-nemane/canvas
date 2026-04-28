@@ -1,5 +1,5 @@
 import { CalendarIcon, ClockIcon, Trash2 } from "lucide-react"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,8 +10,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "../../components/ui/alert-dialog"
-import { Button } from "../../components/ui/button"
+} from "../ui/alert-dialog"
+import { Button } from "../ui/button"
 // import { useNavigate } from "@tanstack/react-router"
 import {useApiKeyNavigate} from '../../lib/apiKeyNav'
 import { useDispatch } from "react-redux"

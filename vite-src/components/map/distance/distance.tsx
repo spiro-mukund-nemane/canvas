@@ -4,7 +4,7 @@ import { type MapRef, Marker } from "react-map-gl/maplibre"
 import { useDispatch, useSelector } from "react-redux"
 import { v4 as uuidv4 } from "uuid"
 // import { X } from "lucide-react"
-import { Button } from "../../../components/ui/button"
+import { Button } from "../../ui/button"
 import RouteInfoPanel from "./route-info-panel"
 import { cancelMeasuring } from "../../../store/map/measurementSlice"
 import type { RootState } from "../../../store" // Adjust the import path as needed

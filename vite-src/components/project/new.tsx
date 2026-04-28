@@ -1,10 +1,10 @@
 import { useState } from "react"
-import { Button } from "../../components/ui/button"
+import { Button } from "../ui/button"
 import {
   Card,
   CardContent,
-} from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
+} from "../ui/card"
+import { Input } from "../ui/input"
 import { ImageIcon } from "lucide-react"
 import { useDispatch } from "react-redux"
 // import { useNavigate } from "@tanstack/react-router"

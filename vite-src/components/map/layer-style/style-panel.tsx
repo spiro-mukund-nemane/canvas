@@ -13,7 +13,7 @@ import { AttributeTable } from "./attribute-table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../ui/dialog"
 import { ScrollArea,ScrollBar } from "../../ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { Separator } from "../../../components/ui/separator"
+import { Separator } from "../../ui/separator"
 
 
 interface StylePanelProps {

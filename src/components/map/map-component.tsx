@@ -253,7 +253,7 @@ export default function MapComponent() {
         {...viewState}
         onMove={(evt: ViewStateChangeEvent) => setViewState(evt.viewState)}
         renderWorldCopies={false}
-        attributionControl={false}
+        // attributionControl={false}
         onLoad={handleMapLoad}
       >
         <NavigationControl position="bottom-right" />
